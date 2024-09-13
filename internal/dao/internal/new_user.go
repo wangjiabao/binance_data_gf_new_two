@@ -34,7 +34,6 @@ type NewUserColumns struct {
 	BinanceId           string //
 	NeedInit            string //
 	Num                 string //
-	ReInit              string //
 }
 
 // newUserColumns holds the columns for table new_user.
@@ -53,7 +52,6 @@ var newUserColumns = NewUserColumns{
 	BinanceId:           "binance_id",
 	NeedInit:            "need_init",
 	Num:                 "num",
-	ReInit:              "re_init",
 }
 
 // NewNewUserDao creates and returns a new DAO object for table data access.

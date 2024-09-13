@@ -26,5 +26,4 @@ type NewUser struct {
 	BinanceId           interface{} //
 	NeedInit            interface{} //
 	Num                 interface{} //
-	ReInit              interface{} //
 }

@@ -24,5 +24,4 @@ type NewUser struct {
 	BinanceId           int64       `json:"binanceId"           ` //
 	NeedInit            int         `json:"needInit"            ` //
 	Num                 float64     `json:"num"                 ` //
-	ReInit              int         `json:"reInit"              ` //
 }

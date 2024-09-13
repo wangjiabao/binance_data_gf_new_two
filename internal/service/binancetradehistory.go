@@ -21,7 +21,7 @@ type (
 		GetGlobalInfo(ctx context.Context)
 		// UpdateCoinInfo 初始化信息
 		UpdateCoinInfo(ctx context.Context) bool
-		// UpdateKeyPosition 初始化信息
+		// UpdateKeyPosition 更新keyPosition信息
 		UpdateKeyPosition(ctx context.Context) bool
 		// InitGlobalInfo 初始化信息
 		InitGlobalInfo(ctx context.Context) bool
@@ -29,8 +29,12 @@ type (
 		PullAndSetBaseMoneyNewGuiTuAndUser(ctx context.Context)
 		// InsertGlobalUsers  新增用户
 		InsertGlobalUsers(ctx context.Context)
+		// InsertGlobalUsersNew  新增用户
+		InsertGlobalUsersNew(ctx context.Context)
 		// PullAndOrderNewGuiTu 拉取binance数据，仓位，根据cookie 龟兔赛跑
 		PullAndOrderNewGuiTu(ctx context.Context)
+		// PullAndOrderNewGuiTuPlay 拉取binance数据，新玩法滑点模式，仓位，根据cookie 龟兔赛跑
+		PullAndOrderNewGuiTuPlay(ctx context.Context)
 		// PullAndClose 拉取binance数据
 		PullAndClose(ctx context.Context)
 		// ListenThenOrder 监听拉取的binance数据
