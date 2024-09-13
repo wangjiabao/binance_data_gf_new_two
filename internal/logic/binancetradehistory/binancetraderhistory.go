@@ -3298,7 +3298,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 					continue
 				}
 
-				if lessThanOrEqualZero(tmpInsertData.PositionAmount.(float64)*tmpInsertData.MarkPrice.(float64), 1000, 1e-7) {
+				if tmpInsertData.PositionAmount.(float64)*tmpInsertData.MarkPrice.(float64) < 1000 {
 					fmt.Println("龟兔，操作小于1000u，信息", tmpInsertData)
 					continue
 				}
@@ -3422,10 +3422,8 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 					continue
 				}
 
-				if lessThanOrEqualZero(lastPositionData.PositionAmount*lastPositionData.MarkPrice, tmpUpdateData.PositionAmount.(float64)*tmpUpdateData.MarkPrice.(float64), 1000) {
+				if math.Abs(lastPositionData.PositionAmount*lastPositionData.MarkPrice-tmpUpdateData.PositionAmount.(float64)*tmpUpdateData.MarkPrice.(float64)) < 1000 {
 					fmt.Println("龟兔，变更，操作小于1000u，信息", lastPositionData, tmpUpdateData)
-					fmt.Println(lastPositionData.PositionAmount*lastPositionData.MarkPrice - tmpUpdateData.PositionAmount.(float64)*tmpUpdateData.MarkPrice.(float64))
-					fmt.Println(math.Abs(lastPositionData.PositionAmount*lastPositionData.MarkPrice - tmpUpdateData.PositionAmount.(float64)*tmpUpdateData.MarkPrice.(float64)))
 					continue
 				}
 
