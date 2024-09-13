@@ -3309,10 +3309,10 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				}
 
 				var (
-					tmpQty     float64
-					priceFloat float64
+					tmpQty float64
+					//priceFloat float64
 					//price          string // 止盈价 委托价格
-					priceStopFloat float64
+					//priceStopFloat float64
 					//priceStop      string // 止损价 委托价格
 					quantity      string
 					quantityFloat float64
@@ -3389,7 +3389,11 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 					if binanceOrderRes.OrderId > 0 {
 
-						time.Sleep(1 * time.Second)
+						if 1 == tmpUser.Id {
+							time.Sleep(1 * time.Second)
+						} else {
+							time.Sleep(1500 * time.Millisecond)
+						}
 
 						tmpSide := "SELL"
 						if "LONG" == positionSide {
@@ -3449,10 +3453,10 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				}
 
 				var (
-					tmpQty     float64
-					priceFloat float64
+					tmpQty float64
+					//priceFloat float64
 					//price          string // 止盈价 委托价格
-					priceStopFloat float64
+					//priceStopFloat float64
 					//priceStop      string // 止损价 委托价格
 					quantity      string
 					quantityFloat float64
@@ -3608,7 +3612,11 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 					if binanceOrderRes.OrderId > 0 {
 
-						time.Sleep(1 * time.Second)
+						if 1 == tmpUser.Id {
+							time.Sleep(1 * time.Second)
+						} else {
+							time.Sleep(1500 * time.Millisecond)
+						}
 
 						tmpSide := "SELL"
 						if "LONG" == positionSide {
