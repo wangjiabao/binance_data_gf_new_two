@@ -3422,8 +3422,8 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 					continue
 				}
 
-				if lessThanOrEqualZero(tmpUpdateData.PositionAmount.(float64)*tmpUpdateData.MarkPrice.(float64), 1000, 1e-7) {
-					fmt.Println("龟兔，变更，操作小于1000u，信息", tmpUpdateData)
+				if lessThanOrEqualZero(lastPositionData.PositionAmount*lastPositionData.MarkPrice, tmpUpdateData.PositionAmount.(float64)*tmpUpdateData.MarkPrice.(float64), 1000) {
+					fmt.Println("龟兔，变更，操作小于1000u，信息", lastPositionData, tmpUpdateData)
 					continue
 				}
 
@@ -3594,13 +3594,13 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						// 请求下单止盈
 						binanceOrderRes2, orderInfoRes2, err = requestBinanceOrderStopTakeProfit(tmpUpdateData.Symbol.(string), side, positionSide, quantity, price, price, tmpUser.ApiKey, tmpUser.ApiSecret)
 						if nil != err || binanceOrderRes2.OrderId <= 0 {
-							fmt.Println("龟兔，添加下单，止盈，信息：", err, binanceOrderRes2, orderInfoRes2, traderNum, tmpUpdateData, tmpUser)
+							fmt.Println("龟兔，添加下单，止盈，信息：", price, priceFloat, err, binanceOrderRes2, orderInfoRes2, traderNum, tmpUpdateData, tmpUser)
 						}
 
 						// 请求下单止损
 						binanceOrderRes3, orderInfoRes3, err = requestBinanceOrderStop(tmpUpdateData.Symbol.(string), side, positionSide, quantity, priceStop, priceStop, tmpUser.ApiKey, tmpUser.ApiSecret)
 						if nil != err || binanceOrderRes3.OrderId <= 0 {
-							fmt.Println("龟兔，添加下单，止损，信息：", err, binanceOrderRes3, orderInfoRes3, traderNum, tmpUpdateData, tmpUser)
+							fmt.Println("龟兔，添加下单，止损，信息：", priceStop, priceStopFloat, err, binanceOrderRes3, orderInfoRes3, traderNum, tmpUpdateData, tmpUser)
 						}
 					}
 
