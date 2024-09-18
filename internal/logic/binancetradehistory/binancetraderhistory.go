@@ -2948,6 +2948,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 		xTime = 10 * time.Second
 		last  map[string]time.Time
 	)
+	last = make(map[string]time.Time, 0)
 
 	// 执行
 	for {
