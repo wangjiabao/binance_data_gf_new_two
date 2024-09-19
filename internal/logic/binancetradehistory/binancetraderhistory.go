@@ -3558,7 +3558,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						side = "SELL"
 						stopSide = "BUY"
 						// 止盈价格
-						priceFloat = tmpUpdateData.MarkPrice.(float64) - tmpUpdateData.MarkPrice.(float64)*0.002
+						priceFloat = tmpUpdateData.MarkPrice.(float64) - tmpUpdateData.MarkPrice.(float64)*0.003
 						priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]) * exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]
 						price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
 
@@ -3573,7 +3573,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						stopSide = "SELL"
 
 						// 止盈价格
-						priceFloat = tmpUpdateData.MarkPrice.(float64) + tmpUpdateData.MarkPrice.(float64)*0.002
+						priceFloat = tmpUpdateData.MarkPrice.(float64) + tmpUpdateData.MarkPrice.(float64)*0.003
 						priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]) * exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]
 						price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
 
@@ -3596,7 +3596,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						stopSide = "SELL"
 
 						// 止盈价格
-						priceFloat = tmpUpdateData.MarkPrice.(float64) + tmpUpdateData.MarkPrice.(float64)*0.002
+						priceFloat = tmpUpdateData.MarkPrice.(float64) + tmpUpdateData.MarkPrice.(float64)*0.003
 						priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]) * exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]
 						price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
 
@@ -3611,7 +3611,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						stopSide = "BUY"
 
 						// 止盈价格
-						priceFloat = tmpUpdateData.MarkPrice.(float64) - tmpUpdateData.MarkPrice.(float64)*0.002
+						priceFloat = tmpUpdateData.MarkPrice.(float64) - tmpUpdateData.MarkPrice.(float64)*0.003
 						priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]) * exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]
 						price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
 
@@ -3634,7 +3634,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						stopSide = "BUY"
 
 						// 止盈价格
-						priceFloat = tmpUpdateData.MarkPrice.(float64) - tmpUpdateData.MarkPrice.(float64)*0.002
+						priceFloat = tmpUpdateData.MarkPrice.(float64) - tmpUpdateData.MarkPrice.(float64)*0.003
 						priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]) * exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]
 						price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
 
@@ -3649,7 +3649,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						stopSide = "SELL"
 
 						// 止盈价格
-						priceFloat = tmpUpdateData.MarkPrice.(float64) + tmpUpdateData.MarkPrice.(float64)*0.002
+						priceFloat = tmpUpdateData.MarkPrice.(float64) + tmpUpdateData.MarkPrice.(float64)*0.003
 						priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]) * exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]
 						price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
 
