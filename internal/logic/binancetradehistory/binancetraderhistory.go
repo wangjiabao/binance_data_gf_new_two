@@ -2945,7 +2945,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 	//last := time.Now() // 初始化 last 为当前时间
 	var (
-		xTime = 10 * time.Second
+		xTime = 2 * time.Second
 		last  map[string]time.Time
 	)
 	last = make(map[string]time.Time, 0)
