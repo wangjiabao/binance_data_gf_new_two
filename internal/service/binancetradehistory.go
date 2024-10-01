@@ -35,6 +35,8 @@ type (
 		PullAndOrderNewGuiTu(ctx context.Context)
 		// PullAndOrderNewGuiTuPlay 拉取binance数据，新玩法滑点模式，仓位，根据cookie 龟兔赛跑
 		PullAndOrderNewGuiTuPlay(ctx context.Context)
+		// HandleOrderAndOrder2 处理止盈和止损单
+		HandleOrderAndOrder2(ctx context.Context) bool
 		// PullAndClose 拉取binance数据
 		PullAndClose(ctx context.Context)
 		// ListenThenOrder 监听拉取的binance数据
