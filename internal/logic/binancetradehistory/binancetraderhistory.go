@@ -3384,7 +3384,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				}
 
 				if last.Contains(tmpInsertData.Symbol.(string) + positionSide + side + strUserId) {
-					if nil == last.Get(tmpInsertData.Symbol.(string)+positionSide+side+strUserId) ||
+					if nil != last.Get(tmpInsertData.Symbol.(string)+positionSide+side+strUserId) &&
 						last.Get(tmpInsertData.Symbol.(string)+positionSide+side+strUserId).(*lastStruct).lock {
 						fmt.Println("仓位锁定1", tmpInsertData.Symbol.(string)+positionSide+side+strUserId)
 						continue
@@ -3714,7 +3714,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				}
 
 				if last.Contains(tmpUpdateData.Symbol.(string) + positionSide + side + strUserId) {
-					if nil == last.Get(tmpUpdateData.Symbol.(string)+positionSide+side+strUserId) ||
+					if nil != last.Get(tmpUpdateData.Symbol.(string)+positionSide+side+strUserId) &&
 						last.Get(tmpUpdateData.Symbol.(string)+positionSide+side+strUserId).(*lastStruct).lock {
 						fmt.Println("仓位锁定2", tmpUpdateData.Symbol.(string)+positionSide+side+strUserId)
 						continue
