@@ -3330,6 +3330,10 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				// 一个新symbol通常3个开仓方向short，long，both，屏蔽一下未真实开仓的
 				tmpInsertData := vInsertData
 
+				if "ETHUSDT" == tmpInsertData.Symbol || "BTCUSDT" == tmpInsertData.Symbol {
+					continue
+				}
+
 				if lessThanOrEqualZero(tmpInsertData.PositionAmount.(float64), 0, 1e-7) {
 					continue
 				}
@@ -3606,6 +3610,10 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 			// 修改仓位
 			for _, vUpdateData := range orderUpdateData {
 				tmpUpdateData := vUpdateData
+
+				if "ETHUSDT" == tmpUpdateData.Symbol || "BTCUSDT" == tmpUpdateData.Symbol {
+					continue
+				}
 
 				if _, ok := binancePositionMapCompare[tmpUpdateData.Symbol.(string)+tmpUpdateData.PositionSide.(string)]; !ok {
 					fmt.Println("龟兔，添加下单任务异常，修改仓位，错误信息：", err, traderNum, tmpUpdateData, tmpUser)
