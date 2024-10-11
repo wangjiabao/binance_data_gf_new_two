@@ -3405,15 +3405,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 					})
 				}
 
-				// 止损价格
-				var (
-					priceStopFloat float64
-					priceStop      string // 止损价 委托价格
-				)
-				priceStopFloat = tmpInsertData.MarkPrice.(float64)
-				priceStopFloat = math.Round(priceStopFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
-				priceStop = strconv.FormatFloat(priceStopFloat, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
-
 				// 本次 保证金*50倍/币价格
 				tmpQty = tmpUserBindTradersAmount * 20 / tmpInsertData.MarkPrice.(float64) // 本次开单数量
 
@@ -3524,6 +3515,21 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 					if nil != errA {
 						fmt.Println("龟兔，添加下单任务异常，止盈任务，新增仓位，错误信息：", errA, traderNum, tmpInsertData, tmpUser)
 						return
+					}
+
+					// 止损价格
+					var (
+						priceStopFloat float64
+						priceStop      string // 止损价 委托价格
+					)
+					if "LONG" == positionSide {
+						priceStopFloat = avgPrice - avgPrice*0.001
+						priceStopFloat = math.Round(priceStopFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
+						priceStop = strconv.FormatFloat(priceStopFloat, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
+					} else {
+						priceStopFloat = avgPrice + avgPrice*0.001
+						priceStopFloat = math.Round(priceStopFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
+						priceStop = strconv.FormatFloat(priceStopFloat, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
 					}
 
 					// 请求下单止损
@@ -3739,15 +3745,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 					})
 				}
 
-				// 止损价格
-				var (
-					priceStopFloat float64
-					priceStop      string // 止损价 委托价格
-				)
-				priceStopFloat = tmpUpdateData.MarkPrice.(float64)
-				priceStopFloat = math.Round(priceStopFloat/exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]) * exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]
-				priceStop = strconv.FormatFloat(priceStopFloat, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
-
 				// 本次 保证金*50倍/币价格
 				tmpQty = tmpUserBindTradersAmount * 20 / tmpUpdateData.MarkPrice.(float64) // 本次开单数量
 
@@ -3857,6 +3854,21 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 					if nil != errA {
 						fmt.Println("龟兔，添加下单任务异常，止盈任务，修改仓位，错误信息：", errA, traderNum, tmpUpdateData, tmpUser)
 						return
+					}
+
+					// 止损价格
+					var (
+						priceStopFloat float64
+						priceStop      string // 止损价 委托价格
+					)
+					if "LONG" == positionSide {
+						priceStopFloat = avgPrice - avgPrice*0.001
+						priceStopFloat = math.Round(priceStopFloat/exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]) * exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]
+						priceStop = strconv.FormatFloat(priceStopFloat, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
+					} else {
+						priceStopFloat = avgPrice + avgPrice*0.001
+						priceStopFloat = math.Round(priceStopFloat/exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]) * exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]
+						priceStop = strconv.FormatFloat(priceStopFloat, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
 					}
 
 					// 请求下单止损
