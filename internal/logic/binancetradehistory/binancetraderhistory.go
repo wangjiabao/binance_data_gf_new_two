@@ -5185,7 +5185,7 @@ func requestBinanceOrderStop(symbol string, side string, positionSide string, qu
 	// 时间
 	now := strconv.FormatInt(time.Now().UTC().UnixMilli(), 10)
 	// 拼请求数据
-	data = "symbol=" + symbol + "&side=" + side + "&type=STOP&stopPrice=" + stopPrice + "&price=" + price + "&positionSide=" + positionSide + "&newOrderRespType=" + "RESULT" + "&quantity=" + quantity + "&timestamp=" + now
+	data = "symbol=" + symbol + "&side=" + side + "&type=STOP_MARKET&stopPrice=" + stopPrice + "&positionSide=" + positionSide + "&newOrderRespType=" + "RESULT" + "&quantity=" + quantity + "&timestamp=" + now
 
 	// 加密
 	h := hmac.New(sha256.New, []byte(secretKey))
