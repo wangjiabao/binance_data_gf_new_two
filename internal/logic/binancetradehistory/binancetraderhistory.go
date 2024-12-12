@@ -3312,8 +3312,8 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				fmt.Println("龟兔，保证金不存在：", tmpUser)
 				return true
 			}
-			//tmpUserBindTradersAmount = baseMoneyUserAllMap.Get(int(tmpUser.Id)).(float64)
-			tmpUserBindTradersAmount = 10
+			tmpUserBindTradersAmount = baseMoneyUserAllMap.Get(int(tmpUser.Id)).(float64)
+			//tmpUserBindTradersAmount = 10
 			if lessThanOrEqualZero(tmpUserBindTradersAmount, 0, 1e-7) {
 				fmt.Println("龟兔，保证金不足为0：", tmpUserBindTradersAmount, tmpUser)
 				return true
