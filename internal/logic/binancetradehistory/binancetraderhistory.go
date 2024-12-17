@@ -3109,7 +3109,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						MarkPrice:      markPrice,
 					})
 				} else {
-					continue
 
 					// 加入数据库
 					insertData = append(insertData, &do.TraderPosition{
@@ -3163,7 +3162,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						MarkPrice:      markPrice,
 					})
 				} else {
-					continue
 
 					if IsEqual(currentAmount, binancePositionMap[vReqResData.Symbol+vReqResData.PositionSide].PositionAmount) {
 						continue
