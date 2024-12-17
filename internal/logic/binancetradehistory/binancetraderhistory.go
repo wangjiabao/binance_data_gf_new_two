@@ -3115,6 +3115,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						Symbol:         vReqResData.Symbol,
 						PositionSide:   vReqResData.PositionSide,
 						PositionAmount: currentAmount, // 正负数保持
+						MarkPrice:      markPrice,
 					})
 
 					// 模拟为多空仓，下单，todo 组合式的判断应该时牢靠的
@@ -3128,6 +3129,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							Symbol:         vReqResData.Symbol,
 							PositionSide:   tmpPositionSide,
 							PositionAmount: currentAmountAbs, // 变成绝对值
+							MarkPrice:      markPrice,
 						})
 					} else {
 						// 模拟多
@@ -3136,6 +3138,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							Symbol:         vReqResData.Symbol,
 							PositionSide:   tmpPositionSide,
 							PositionAmount: currentAmountAbs, // 变成绝对值
+							MarkPrice:      markPrice,
 						})
 					}
 				}
@@ -3172,6 +3175,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						Symbol:         vReqResData.Symbol,
 						PositionSide:   vReqResData.PositionSide,
 						PositionAmount: currentAmount, // 正负数保持
+						MarkPrice:      markPrice,
 					})
 
 					// 第一步：构造虚拟的上一次仓位，空或多或无
@@ -3193,6 +3197,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						PositionAmount: 0,
 						CreatedAt:      binancePositionMapCompare[vReqResData.Symbol+"SHORT"].CreatedAt,
 						UpdatedAt:      binancePositionMapCompare[vReqResData.Symbol+"SHORT"].UpdatedAt,
+						MarkPrice:      markPrice,
 					}
 					binancePositionMapCompare[vReqResData.Symbol+"LONG"] = &entity.TraderPosition{
 						Id:             binancePositionMapCompare[vReqResData.Symbol+"LONG"].Id,
@@ -3201,6 +3206,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						PositionAmount: 0,
 						CreatedAt:      binancePositionMapCompare[vReqResData.Symbol+"LONG"].CreatedAt,
 						UpdatedAt:      binancePositionMapCompare[vReqResData.Symbol+"LONG"].UpdatedAt,
+						MarkPrice:      markPrice,
 					}
 
 					if IsEqual(binancePositionMap[vReqResData.Symbol+vReqResData.PositionSide].PositionAmount, 0) { // both仓为0
@@ -3230,12 +3236,13 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 						// 上次和本次相反需要平上次
 						if "LONG" == lastPositionSide {
-							orderUpdateData = append(orderUpdateData, &do.TraderPosition{
-								Id:             binancePositionMap[vReqResData.Symbol+vReqResData.PositionSide].Id,
-								Symbol:         vReqResData.Symbol,
-								PositionSide:   lastPositionSide,
-								PositionAmount: float64(0),
-							})
+							//orderUpdateData = append(orderUpdateData, &do.TraderPosition{
+							//	Id:             binancePositionMap[vReqResData.Symbol+vReqResData.PositionSide].Id,
+							//	Symbol:         vReqResData.Symbol,
+							//	PositionSide:   lastPositionSide,
+							//	PositionAmount: float64(0),
+							//	MarkPrice:      markPrice,
+							//})
 						}
 
 						tmpPositionSide = "SHORT"
@@ -3244,12 +3251,13 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 						// 上次和本次相反需要平上次
 						if "SHORT" == lastPositionSide {
-							orderUpdateData = append(orderUpdateData, &do.TraderPosition{
-								Id:             binancePositionMap[vReqResData.Symbol+vReqResData.PositionSide].Id,
-								Symbol:         vReqResData.Symbol,
-								PositionSide:   lastPositionSide,
-								PositionAmount: float64(0),
-							})
+							//orderUpdateData = append(orderUpdateData, &do.TraderPosition{
+							//	Id:             binancePositionMap[vReqResData.Symbol+vReqResData.PositionSide].Id,
+							//	Symbol:         vReqResData.Symbol,
+							//	PositionSide:   lastPositionSide,
+							//	PositionAmount: float64(0),
+							//	MarkPrice:      markPrice,
+							//})
 						}
 
 						tmpPositionSide = "LONG"
@@ -3260,6 +3268,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						Symbol:         vReqResData.Symbol,
 						PositionSide:   tmpPositionSide,
 						PositionAmount: currentAmountAbs,
+						MarkPrice:      markPrice,
 					})
 				}
 			}
