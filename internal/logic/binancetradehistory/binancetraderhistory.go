@@ -4210,13 +4210,13 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 									continue
 								}
 
-								//// 止盈单信息
-								//lastOrders.Set(tmpUpdateData.Symbol.(string)+positionSide+side+strUserId, &lastOrderStruct{
-								//	orderId:   strconv.FormatUint(uint64(binanceOrderRes2.OrderId), 10),
-								//	orderInfo: binanceOrderRes2,
-								//	user:      tmpUser,
-								//	time:      time.Now(),
-								//})
+								// 止盈单信息
+								lastOrders.Set(tmpUpdateData.Symbol.(string)+positionSide+side+strUserId, &lastOrderStruct{
+									orderId:   strconv.FormatUint(uint64(binanceOrderRes2.OrderId), 10),
+									orderInfo: binanceOrderRes2,
+									user:      tmpUser,
+									time:      time.Now(),
+								})
 
 								break
 							}
