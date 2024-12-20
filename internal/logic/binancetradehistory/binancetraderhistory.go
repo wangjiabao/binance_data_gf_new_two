@@ -4287,11 +4287,11 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							priceStop      string // 止损价 委托价格
 						)
 						if "LONG" == positionSide {
-							priceStopFloat = avgPrice - avgPrice*0.001
+							priceStopFloat = avgPrice - avgPrice*0.04
 							priceStopFloat = math.Round(priceStopFloat/exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]) * exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]
 							priceStop = strconv.FormatFloat(priceStopFloat, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
 						} else {
-							priceStopFloat = avgPrice + avgPrice*0.001
+							priceStopFloat = avgPrice + avgPrice*0.04
 							priceStopFloat = math.Round(priceStopFloat/exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]) * exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]
 							priceStop = strconv.FormatFloat(priceStopFloat, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
 						}
