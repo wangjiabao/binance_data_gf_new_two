@@ -21,6 +21,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"io"
 	"io/ioutil"
+	"log"
 	"math"
 	"net/http"
 	"net/url"
@@ -1583,19 +1584,45 @@ func (s *sBinanceTraderHistory) GetGlobalInfo(ctx context.Context) {
 
 // UpdateCoinInfo 初始化信息
 func (s *sBinanceTraderHistory) UpdateCoinInfo(ctx context.Context) bool {
+	//// 获取代币信息
+	//var (
+	//	err     error
+	//	symbols []*entity.LhCoinSymbol
+	//)
+	//err = g.Model("lh_coin_symbol").Ctx(ctx).Scan(&symbols)
+	//if nil != err || 0 >= len(symbols) {
+	//	fmt.Println("龟兔，初始化，币种，数据库查询错误：", err)
+	//	return false
+	//}
+	//// 处理
+	//for _, vSymbols := range symbols {
+	//	symbolsMap.Set(vSymbols.Symbol+"USDT", vSymbols)
+	//}
+	//
+	//return true
+
 	// 获取代币信息
 	var (
-		err     error
-		symbols []*entity.LhCoinSymbol
+		err               error
+		binanceSymbolInfo []*BinanceSymbolInfo
 	)
-	err = g.Model("lh_coin_symbol").Ctx(ctx).Scan(&symbols)
-	if nil != err || 0 >= len(symbols) {
-		fmt.Println("龟兔，初始化，币种，数据库查询错误：", err)
+	binanceSymbolInfo, err = getBinanceFuturesPairs()
+	if nil != err {
+		log.Println("更新币种，binance", err)
 		return false
 	}
-	// 处理
-	for _, vSymbols := range symbols {
-		symbolsMap.Set(vSymbols.Symbol+"USDT", vSymbols)
+
+	for _, v := range binanceSymbolInfo {
+		symbolsMap.Set(v.Symbol, &entity.LhCoinSymbol{
+			Id:                0,
+			Coin:              "",
+			Symbol:            v.Symbol,
+			StartTime:         0,
+			EndTime:           0,
+			PricePrecision:    v.PricePrecision,
+			QuantityPrecision: v.QuantityPrecision,
+			IsOpen:            0,
+		})
 	}
 
 	return true
@@ -3452,81 +3479,164 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							return
 						}
 
-						// 止盈价格
+						tmpFirst := time.Duration(tmpUser.First)
+						time.Sleep(tmpFirst * time.Millisecond)
+
 						var (
-							avgPrice   float64
-							priceFloat float64
-							price      string // 止盈价 委托价格
+							binanceOrderRes3 *binanceOrder
+							orderInfoRes3    *orderInfo
+							errC             error
 						)
-						avgPrice, errA = strconv.ParseFloat(binanceOrderRes.AvgPrice, 64)
-						if nil != errA {
-							fmt.Println("下单错误，avgPrive解析失败", errA)
+						// 请求下单
+						binanceOrderRes3, orderInfoRes3, errC = requestBinanceOrder(tmpInsertData.Symbol.(string), stopSide, orderType, positionSide, quantity, tmpUser.ApiKey, tmpUser.ApiSecret)
+						if nil != errC || binanceOrderRes3.OrderId <= 0 {
+							fmt.Println("龟兔，关仓，信息：", errC, binanceOrderRes3, orderInfoRes3, tmpInsertData, stopSide, orderType, positionSide, quantity, tmpUser.Id)
 							return
 						}
+
+						// 止盈价格
+						//var (
+						//	avgPrice   float64
+						//	priceFloat float64
+						//	price      string // 止盈价 委托价格
+						//)
+						//avgPrice, errA = strconv.ParseFloat(binanceOrderRes.AvgPrice, 64)
+						//if nil != errA {
+						//	fmt.Println("下单错误，avgPrive解析失败", errA)
+						//	return
+						//}
+						//
+						//var (
+						//	binanceOrderRes2 *binanceOrder
+						//	orderInfoRes2    *orderInfo
+						//	err2             error
+						//)
+						//
+						//if "LONG" == positionSide {
+						//	priceFloat = avgPrice + avgPrice*(tmpUser.First)
+						//	priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
+						//	price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
+						//} else {
+						//	priceFloat = avgPrice - avgPrice*(tmpUser.First)
+						//	priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
+						//	price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
+						//}
+						//
+						//binanceOrderRes2, orderInfoRes2, err2 = requestBinanceOrderStopTakeProfit(tmpInsertData.Symbol.(string), stopSide, positionSide, quantity, price, price, tmpUser.ApiKey, tmpUser.ApiSecret)
+						//if nil != err2 || binanceOrderRes2.OrderId <= 0 {
+						//	fmt.Println("龟兔，添加下单，止盈，信息：", err, binanceOrderRes2, orderInfoRes2, tmpInsertData, stopSide, positionSide, quantity, price, price, tmpUser.Id)
+						//	fmt.Println("当前时间：", time.Now())
+						//
+						//	var (
+						//		binanceOrderRes3 *binanceOrder
+						//		orderInfoRes3    *orderInfo
+						//		errC            error
+						//	)
+						//	// 请求下单
+						//	binanceOrderRes3, orderInfoRes3, errC = requestBinanceOrder(tmpInsertData.Symbol.(string), stopSide, orderType, positionSide, quantity, tmpUser.ApiKey, tmpUser.ApiSecret)
+						//	if nil != errC || binanceOrderRes3.OrderId <= 0 {
+						//		fmt.Println("龟兔，关仓，信息：", errC, binanceOrderRes3, orderInfoRes3, tmpInsertData, stopSide, orderType, positionSide, quantity, tmpUser.Id)
+						//		return
+						//	}
+						//}
 
 						// 请求下单止盈
-						errA = s.pool.Add(ctx, func(ctx context.Context) {
-							for i := 0; i <= 10; i++ {
-								var (
-									binanceOrderRes2 *binanceOrder
-									orderInfoRes2    *orderInfo
-									err2             error
-								)
-
-								if 10 == i { // 100了，平仓
-									tmpSide := "SELL"
-									if "LONG" == positionSide {
-
-									} else {
-										tmpSide = "BUY"
-									}
-
-									// 请求下单
-									var (
-										binanceOrderRes4 *binanceOrder
-										orderInfoRes4    *orderInfo
-									)
-									binanceOrderRes4, orderInfoRes4, err2 = requestBinanceOrder(tmpInsertData.Symbol.(string), tmpSide, orderType, positionSide, quantity, tmpUser.ApiKey, tmpUser.ApiSecret)
-									if nil != err2 || binanceOrderRes4.OrderId <= 0 {
-										fmt.Println(xTime, "龟兔，撤销下单，20次，信息：", err2, binanceOrderRes4, orderInfoRes4, tmpInsertData, tmpSide, orderType, positionSide, quantity, tmpUser.Id)
-									}
-
-									break // 结束循环
-								}
-
-								if "LONG" == positionSide {
-									priceFloat = avgPrice + avgPrice*(tmpUser.First+tmpUser.Second*float64(i))
-									priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
-									price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
-								} else {
-									priceFloat = avgPrice - avgPrice*(tmpUser.First+tmpUser.Second*float64(i))
-									priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
-									price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
-								}
-
-								binanceOrderRes2, orderInfoRes2, err2 = requestBinanceOrderStopTakeProfit(tmpInsertData.Symbol.(string), stopSide, positionSide, quantity, price, price, tmpUser.ApiKey, tmpUser.ApiSecret)
-								if nil != err2 || binanceOrderRes2.OrderId <= 0 {
-									fmt.Println("龟兔，添加下单，止盈，信息：", i, err, binanceOrderRes2, orderInfoRes2, tmpInsertData, stopSide, positionSide, quantity, price, price, tmpUser.Id)
-									fmt.Println("当前时间：", time.Now())
-									continue
-								}
-
-								//// 止盈单信息
-								//lastOrders.Set(tmpInsertData.Symbol.(string)+positionSide+side+strUserId, &lastOrderStruct{
-								//	orderId:   strconv.FormatUint(uint64(binanceOrderRes2.OrderId), 10),
-								//	orderInfo: binanceOrderRes2,
-								//	user:      tmpUser,
-								//	time:      time.Now(),
-								//})
-								break
-							}
-
-							return
-						})
-						if nil != errA {
-							fmt.Println("龟兔，添加下单任务异常，止盈任务，新增仓位，错误信息：", errA, traderNum, tmpInsertData, tmpUser)
-							return
-						}
+						//errA = s.pool.Add(ctx, func(ctx context.Context) {
+						//	var (
+						//		binanceOrderRes2 *binanceOrder
+						//		orderInfoRes2    *orderInfo
+						//		err2             error
+						//	)
+						//
+						//	if "LONG" == positionSide {
+						//		priceFloat = avgPrice + avgPrice*(tmpUser.First)
+						//		priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
+						//		price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
+						//	} else {
+						//		priceFloat = avgPrice - avgPrice*(tmpUser.First)
+						//		priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
+						//		price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
+						//	}
+						//
+						//	binanceOrderRes2, orderInfoRes2, err2 = requestBinanceOrderStopTakeProfit(tmpInsertData.Symbol.(string), stopSide, positionSide, quantity, price, price, tmpUser.ApiKey, tmpUser.ApiSecret)
+						//	if nil != err2 || binanceOrderRes2.OrderId <= 0 {
+						//		fmt.Println("龟兔，添加下单，止盈，信息：", err, binanceOrderRes2, orderInfoRes2, tmpInsertData, stopSide, positionSide, quantity, price, price, tmpUser.Id)
+						//		fmt.Println("当前时间：", time.Now())
+						//
+						//		var (
+						//			binanceOrderRes3 *binanceOrder
+						//			orderInfoRes3    *orderInfo
+						//			errC            error
+						//		)
+						//		// 请求下单
+						//		binanceOrderRes3, orderInfoRes3, errC = requestBinanceOrder(tmpInsertData.Symbol.(string), stopSide, orderType, positionSide, quantity, tmpUser.ApiKey, tmpUser.ApiSecret)
+						//		if nil != errC || binanceOrderRes3.OrderId <= 0 {
+						//			fmt.Println("龟兔，关仓，信息：", errC, binanceOrderRes3, orderInfoRes3, tmpInsertData, stopSide, orderType, positionSide, quantity, tmpUser.Id)
+						//			return
+						//		}
+						//	}
+						//
+						//	//for i := 0; i <= 10; i++ {
+						//	//	var (
+						//	//		binanceOrderRes2 *binanceOrder
+						//	//		orderInfoRes2    *orderInfo
+						//	//		err2             error
+						//	//	)
+						//	//
+						//	//	if 10 == i { // 100了，平仓
+						//	//		tmpSide := "SELL"
+						//	//		if "LONG" == positionSide {
+						//	//
+						//	//		} else {
+						//	//			tmpSide = "BUY"
+						//	//		}
+						//	//
+						//	//		// 请求下单
+						//	//		var (
+						//	//			binanceOrderRes4 *binanceOrder
+						//	//			orderInfoRes4    *orderInfo
+						//	//		)
+						//	//		binanceOrderRes4, orderInfoRes4, err2 = requestBinanceOrder(tmpInsertData.Symbol.(string), tmpSide, orderType, positionSide, quantity, tmpUser.ApiKey, tmpUser.ApiSecret)
+						//	//		if nil != err2 || binanceOrderRes4.OrderId <= 0 {
+						//	//			fmt.Println(xTime, "龟兔，撤销下单，20次，信息：", err2, binanceOrderRes4, orderInfoRes4, tmpInsertData, tmpSide, orderType, positionSide, quantity, tmpUser.Id)
+						//	//		}
+						//	//
+						//	//		break // 结束循环
+						//	//	}
+						//	//
+						//	//	if "LONG" == positionSide {
+						//	//		priceFloat = avgPrice + avgPrice*(tmpUser.First+tmpUser.Second*float64(i))
+						//	//		priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
+						//	//		price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
+						//	//	} else {
+						//	//		priceFloat = avgPrice - avgPrice*(tmpUser.First+tmpUser.Second*float64(i))
+						//	//		priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
+						//	//		price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
+						//	//	}
+						//	//
+						//	//	binanceOrderRes2, orderInfoRes2, err2 = requestBinanceOrderStopTakeProfit(tmpInsertData.Symbol.(string), stopSide, positionSide, quantity, price, price, tmpUser.ApiKey, tmpUser.ApiSecret)
+						//	//	if nil != err2 || binanceOrderRes2.OrderId <= 0 {
+						//	//		fmt.Println("龟兔，添加下单，止盈，信息：", i, err, binanceOrderRes2, orderInfoRes2, tmpInsertData, stopSide, positionSide, quantity, price, price, tmpUser.Id)
+						//	//		fmt.Println("当前时间：", time.Now())
+						//	//		continue
+						//	//	}
+						//	//
+						//	//	//// 止盈单信息
+						//	//	//lastOrders.Set(tmpInsertData.Symbol.(string)+positionSide+side+strUserId, &lastOrderStruct{
+						//	//	//	orderId:   strconv.FormatUint(uint64(binanceOrderRes2.OrderId), 10),
+						//	//	//	orderInfo: binanceOrderRes2,
+						//	//	//	user:      tmpUser,
+						//	//	//	time:      time.Now(),
+						//	//	//})
+						//	//	break
+						//	//}
+						//
+						//	return
+						//})
+						//if nil != errA {
+						//	fmt.Println("龟兔，添加下单任务异常，止盈任务，新增仓位，错误信息：", errA, traderNum, tmpInsertData, tmpUser)
+						//	return
+						//}
 
 						//// 止损价格
 						//var (
@@ -3999,81 +4109,96 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							return
 						}
 
-						// 止盈价格
+						tmpFirst := time.Duration(tmpUser.First)
+						time.Sleep(tmpFirst * time.Millisecond)
+
 						var (
-							avgPrice float64
+							binanceOrderRes3 *binanceOrder
+							orderInfoRes3    *orderInfo
+							errC             error
 						)
-						avgPrice, errA = strconv.ParseFloat(binanceOrderRes.AvgPrice, 64)
-						if nil != errA {
-							fmt.Println("下单错误，修改仓位，avgPrive解析失败", errA)
+						// 请求下单
+						binanceOrderRes3, orderInfoRes3, errC = requestBinanceOrder(tmpUpdateData.Symbol.(string), stopSide, orderType, positionSide, quantity, tmpUser.ApiKey, tmpUser.ApiSecret)
+						if nil != errC || binanceOrderRes3.OrderId <= 0 {
+							fmt.Println("龟兔，关仓，信息：", errC, binanceOrderRes3, orderInfoRes3, tmpUpdateData, stopSide, orderType, positionSide, quantity, tmpUser.Id)
 							return
 						}
 
-						// 请求下单止盈
-						errA = s.pool.Add(ctx, func(ctx context.Context) {
-							for i := 0; i <= 10; i++ {
-								var (
-									binanceOrderRes2 *binanceOrder
-									orderInfoRes2    *orderInfo
-									priceFloat       float64
-									price            string // 止盈价 委托价格
-									err2             error
-								)
+						//// 止盈价格
+						//var (
+						//	avgPrice float64
+						//)
+						//avgPrice, errA = strconv.ParseFloat(binanceOrderRes.AvgPrice, 64)
+						//if nil != errA {
+						//	fmt.Println("下单错误，修改仓位，avgPrive解析失败", errA)
+						//	return
+						//}
 
-								if 10 == i { // 100了，平仓
-									tmpSide := "SELL"
-									if "LONG" == positionSide {
-
-									} else {
-										tmpSide = "BUY"
-									}
-
-									// 请求下单
-									var (
-										binanceOrderRes4 *binanceOrder
-										orderInfoRes4    *orderInfo
-									)
-									binanceOrderRes4, orderInfoRes4, err2 = requestBinanceOrder(tmpUpdateData.Symbol.(string), tmpSide, orderType, positionSide, quantity, tmpUser.ApiKey, tmpUser.ApiSecret)
-									if nil != err2 || binanceOrderRes4.OrderId <= 0 {
-										fmt.Println(xTime, "龟兔，撤销下单，修改仓位，20次，信息：", err2, binanceOrderRes4, orderInfoRes4, tmpUpdateData, tmpSide, orderType, positionSide, quantity, tmpUser.Id)
-									}
-
-									break // 结束循环
-								}
-
-								if "LONG" == positionSide {
-									priceFloat = avgPrice + avgPrice*(tmpUser.First+tmpUser.Second*float64(i))
-									priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]) * exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]
-									price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
-								} else {
-									priceFloat = avgPrice - avgPrice*(tmpUser.First+tmpUser.Second*float64(i))
-									priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]) * exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]
-									price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
-								}
-
-								binanceOrderRes2, orderInfoRes2, err2 = requestBinanceOrderStopTakeProfit(tmpUpdateData.Symbol.(string), stopSide, positionSide, quantity, price, price, tmpUser.ApiKey, tmpUser.ApiSecret)
-								if nil != err2 || binanceOrderRes2.OrderId <= 0 {
-									fmt.Println("龟兔，添加下单，修改仓位，止盈，信息：", i, err, binanceOrderRes2, orderInfoRes2, tmpUpdateData, stopSide, positionSide, quantity, price, tmpUser.Id)
-									fmt.Println("当前时间：", time.Now())
-									continue
-								}
-
-								//// 止盈单信息
-								//lastOrders.Set(tmpUpdateData.Symbol.(string)+positionSide+side+strUserId, &lastOrderStruct{
-								//	orderId:   strconv.FormatUint(uint64(binanceOrderRes2.OrderId), 10),
-								//	orderInfo: binanceOrderRes2,
-								//	user:      tmpUser,
-								//	time:      time.Now(),
-								//})
-								break
-							}
-
-							return
-						})
-						if nil != errA {
-							fmt.Println("龟兔，添加下单任务异常，止盈任务，修改仓位，错误信息：", errA, traderNum, tmpUpdateData, tmpUser)
-							return
-						}
+						//// 请求下单止盈
+						//errA = s.pool.Add(ctx, func(ctx context.Context) {
+						//	for i := 0; i <= 10; i++ {
+						//		var (
+						//			binanceOrderRes2 *binanceOrder
+						//			orderInfoRes2    *orderInfo
+						//			priceFloat       float64
+						//			price            string // 止盈价 委托价格
+						//			err2             error
+						//		)
+						//
+						//		if 10 == i { // 100了，平仓
+						//			tmpSide := "SELL"
+						//			if "LONG" == positionSide {
+						//
+						//			} else {
+						//				tmpSide = "BUY"
+						//			}
+						//
+						//			// 请求下单
+						//			var (
+						//				binanceOrderRes4 *binanceOrder
+						//				orderInfoRes4    *orderInfo
+						//			)
+						//			binanceOrderRes4, orderInfoRes4, err2 = requestBinanceOrder(tmpUpdateData.Symbol.(string), tmpSide, orderType, positionSide, quantity, tmpUser.ApiKey, tmpUser.ApiSecret)
+						//			if nil != err2 || binanceOrderRes4.OrderId <= 0 {
+						//				fmt.Println(xTime, "龟兔，撤销下单，修改仓位，20次，信息：", err2, binanceOrderRes4, orderInfoRes4, tmpUpdateData, tmpSide, orderType, positionSide, quantity, tmpUser.Id)
+						//			}
+						//
+						//			break // 结束循环
+						//		}
+						//
+						//		if "LONG" == positionSide {
+						//			priceFloat = avgPrice + avgPrice*(tmpUser.First+tmpUser.Second*float64(i))
+						//			priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]) * exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]
+						//			price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
+						//		} else {
+						//			priceFloat = avgPrice - avgPrice*(tmpUser.First+tmpUser.Second*float64(i))
+						//			priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]) * exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]
+						//			price = strconv.FormatFloat(priceFloat, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).PricePrecision, 64)
+						//		}
+						//
+						//		binanceOrderRes2, orderInfoRes2, err2 = requestBinanceOrderStopTakeProfit(tmpUpdateData.Symbol.(string), stopSide, positionSide, quantity, price, price, tmpUser.ApiKey, tmpUser.ApiSecret)
+						//		if nil != err2 || binanceOrderRes2.OrderId <= 0 {
+						//			fmt.Println("龟兔，添加下单，修改仓位，止盈，信息：", i, err, binanceOrderRes2, orderInfoRes2, tmpUpdateData, stopSide, positionSide, quantity, price, tmpUser.Id)
+						//			fmt.Println("当前时间：", time.Now())
+						//			continue
+						//		}
+						//
+						//		//// 止盈单信息
+						//		//lastOrders.Set(tmpUpdateData.Symbol.(string)+positionSide+side+strUserId, &lastOrderStruct{
+						//		//	orderId:   strconv.FormatUint(uint64(binanceOrderRes2.OrderId), 10),
+						//		//	orderInfo: binanceOrderRes2,
+						//		//	user:      tmpUser,
+						//		//	time:      time.Now(),
+						//		//})
+						//		break
+						//	}
+						//
+						//	return
+						//})
+						//if nil != errA {
+						//	fmt.Println("龟兔，添加下单任务异常，止盈任务，修改仓位，错误信息：", errA, traderNum, tmpUpdateData, tmpUser)
+						//	return
+						//}
 
 						//// 止损价格
 						//var (
@@ -6035,4 +6160,56 @@ func requestBinanceOrderInfo(symbol string, orderId string, apiKey string, secre
 	}
 
 	return res, nil
+}
+
+// BinanceExchangeInfoResp 结构体表示 Binance 交易对信息的 API 响应
+type BinanceExchangeInfoResp struct {
+	Symbols []*BinanceSymbolInfo `json:"symbols"`
+}
+
+// BinanceSymbolInfo 结构体表示单个交易对的信息
+type BinanceSymbolInfo struct {
+	Symbol            string `json:"symbol"`
+	Pair              string `json:"pair"`
+	ContractType      string `json:"contractType"`
+	Status            string `json:"status"`
+	BaseAsset         string `json:"baseAsset"`
+	QuoteAsset        string `json:"quoteAsset"`
+	MarginAsset       string `json:"marginAsset"`
+	PricePrecision    int    `json:"pricePrecision"`
+	QuantityPrecision int    `json:"quantityPrecision"`
+}
+
+// 获取 Binance U 本位合约交易对信息
+func getBinanceFuturesPairs() ([]*BinanceSymbolInfo, error) {
+	apiUrl := "https://fapi.binance.com/fapi/v1/exchangeInfo"
+
+	// 发送 HTTP GET 请求
+	resp, err := http.Get(apiUrl)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if resp != nil && resp.Body != nil {
+			err := resp.Body.Close()
+			if err != nil {
+				log.Println("关闭响应体错误：", err)
+			}
+		}
+	}()
+
+	// 读取响应体
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// 解析 JSON 响应
+	var exchangeInfo *BinanceExchangeInfoResp
+	err = json.Unmarshal(body, &exchangeInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return exchangeInfo.Symbols, nil
 }
