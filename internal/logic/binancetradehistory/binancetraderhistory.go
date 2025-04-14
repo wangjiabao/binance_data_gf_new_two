@@ -2993,6 +2993,16 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 	//	xTime = 2 * time.Second
 	//)
 
+	exMap := make(map[string]bool, 0)
+	exMap["ETHUSDT"] = true
+	exMap["BTCUSDT"] = true
+	exMap["PEPEUSDT"] = true
+	exMap["SOLUSDT"] = true
+	exMap["FILUSDT"] = true
+	exMap["DOGEUSDT"] = true
+	exMap["ADAUSDT"] = true
+	exMap["BNBUSDT"] = true
+
 	// 执行
 	for {
 		//time.Sleep(5 * time.Second)
@@ -3369,6 +3379,10 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				//	continue
 				//}
 
+				if _, ok := exMap[tmpInsertData.Symbol.(string)]; ok {
+					continue
+				}
+
 				if lessThanOrEqualZero(tmpInsertData.PositionAmount.(float64), 0, 1e-7) {
 					continue
 				}
@@ -3478,6 +3492,10 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				//if "ETHUSDT" == tmpUpdateData.Symbol || "BTCUSDT" == tmpUpdateData.Symbol {
 				//	continue
 				//}
+
+				if _, ok := exMap[tmpUpdateData.Symbol.(string)]; ok {
+					continue
+				}
 
 				if _, ok := binancePositionMapCompare[tmpUpdateData.Symbol.(string)+tmpUpdateData.PositionSide.(string)]; !ok {
 					log.Println("龟兔，添加下单任务异常，修改仓位，错误信息：", err, traderNum, tmpUpdateData, tmpUser)
