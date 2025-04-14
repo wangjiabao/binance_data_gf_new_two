@@ -51,11 +51,11 @@ var (
 			}
 			gtimer.AddSingleton(ctx, time.Second*300, handle3)
 
-			// 1秒/次，处理订单信息任务流
-			handle4 := func(ctx context.Context) {
-				serviceBinanceTrader.HandleOrderAndOrder2(ctx)
-			}
-			gtimer.AddSingleton(ctx, time.Second*1, handle4)
+			//// 1秒/次，处理订单信息任务流
+			//handle4 := func(ctx context.Context) {
+			//	serviceBinanceTrader.HandleOrderAndOrder2(ctx)
+			//}
+			//gtimer.AddSingleton(ctx, time.Second*1, handle4)
 
 			// 任务1 同步订单
 			go func() {
