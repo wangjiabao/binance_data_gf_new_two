@@ -10,7 +10,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/gateio/gateapi-go/v6"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gqueue"
 	"github.com/gogf/gf/v2/container/gset"
@@ -1527,7 +1529,8 @@ var (
 	// 仓位
 	binancePositionMap = make(map[string]*entity.TraderPosition, 0)
 
-	symbolsMap = gmap.NewStrAnyMap(true)
+	symbolsMap     = gmap.NewStrAnyMap(true)
+	symbolsMapGate = gmap.NewStrAnyMap(true)
 )
 
 // GetGlobalInfo 获取全局测试数据
@@ -1582,6 +1585,12 @@ func (s *sBinanceTraderHistory) GetGlobalInfo(ctx context.Context) {
 //	return true
 //}
 
+type SymbolGate struct {
+	Symbol           string  `json:"symbol"            ` //
+	QuantoMultiplier float64 `json:"quantityPrecision" ` //
+	OrderPriceRound  int
+}
+
 // UpdateCoinInfo 初始化信息
 func (s *sBinanceTraderHistory) UpdateCoinInfo(ctx context.Context) bool {
 	//// 获取代币信息
@@ -1625,7 +1634,47 @@ func (s *sBinanceTraderHistory) UpdateCoinInfo(ctx context.Context) bool {
 		})
 	}
 
+	var (
+		resGate []gateapi.Contract
+	)
+
+	resGate, err = getGateContract()
+	if nil != err {
+		log.Println("更新币种， gate", err)
+		return false
+	}
+
+	for _, v := range resGate {
+		var (
+			tmp  float64
+			tmp2 int
+		)
+		tmp, err = strconv.ParseFloat(v.QuantoMultiplier, 64)
+		if nil != err {
+			continue
+		}
+
+		tmp2 = getDecimalPlaces(v.OrderPriceRound)
+
+		base := strings.TrimSuffix(v.Name, "_USDT")
+		symbolsMapGate.Set(base+"USDT", &SymbolGate{
+			Symbol:           v.Name,
+			QuantoMultiplier: tmp,
+			OrderPriceRound:  tmp2,
+		})
+	}
+
 	return true
+}
+
+func getDecimalPlaces(orderPriceRound string) int {
+	parts := strings.Split(orderPriceRound, ".")
+	if len(parts) == 2 {
+		// 去除末尾多余的 0
+		decimals := strings.TrimRight(parts[1], "0")
+		return len(decimals)
+	}
+	return 0
 }
 
 // UpdateKeyPosition 更新keyPosition信息
@@ -3429,24 +3478,24 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				// 本次 保证金*50倍/币价格
 				tmpQty = tmpUserBindTradersAmount * float64(tmpUser.BinanceId) / tmpInsertData.MarkPrice.(float64) // 本次开单数量
 
-				// 精度调整
-				if 0 >= symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
-					quantity = fmt.Sprintf("%d", int64(tmpQty))
-				} else {
-					quantity = strconv.FormatFloat(tmpQty, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, 64)
-				}
-
-				quantityFloat, err = strconv.ParseFloat(quantity, 64)
-				if nil != err {
-					log.Println(err)
-					continue
-				}
-
-				if lessThanOrEqualZero(quantityFloat, 0, 1e-7) {
-					continue
-				}
-
 				if 0 == tmpUser.OrderType {
+					// 精度调整
+					if 0 >= symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
+						quantity = fmt.Sprintf("%d", int64(tmpQty))
+					} else {
+						quantity = strconv.FormatFloat(tmpQty, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, 64)
+					}
+
+					quantityFloat, err = strconv.ParseFloat(quantity, 64)
+					if nil != err {
+						log.Println(err)
+						continue
+					}
+
+					if lessThanOrEqualZero(quantityFloat, 0, 1e-7) {
+						continue
+					}
+
 					//wg.Add(1)
 					err = s.pool.Add(ctx, func(ctx context.Context) {
 						//defer wg.Done()
@@ -3485,6 +3534,22 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						log.Println("龟兔，添加下单任务异常，新增仓位，错误信息：", err, tmpInsertData, tmpUser)
 					}
 				} else if 1 == tmpUser.OrderType {
+					// 精度调整
+					if 0 >= symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
+						quantity = fmt.Sprintf("%d", int64(tmpQty))
+					} else {
+						quantity = strconv.FormatFloat(tmpQty, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, 64)
+					}
+
+					quantityFloat, err = strconv.ParseFloat(quantity, 64)
+					if nil != err {
+						log.Println(err)
+						continue
+					}
+
+					if lessThanOrEqualZero(quantityFloat, 0, 1e-7) {
+						continue
+					}
 
 					if _, ok := exchangeInfoTickSize[tmpInsertData.Symbol.(string)]; !ok {
 						log.Println("龟兔，代币信息无效2，信息", tmpInsertData, tmpUser)
@@ -3611,6 +3676,125 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 					if nil != err {
 						fmt.Println("龟兔，添加下单任务异常，新增仓位，错误信息：", err, tmpInsertData, tmpUser)
 					}
+				} else if 2 == tmpUser.OrderType {
+					if !symbolsMapGate.Contains(tmpInsertData.Symbol.(string)) {
+						fmt.Println("无效gate代币信息：", err, tmpUser, tmpInsertData.Symbol.(string))
+					}
+
+					if 0 < symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(*SymbolGate).QuantoMultiplier {
+						//log.Println("OrderAtPlat，交易对信息错误:", user, currentData, s.SymbolsMap.Get(symbolMapKey).(*entity.LhCoinSymbol))
+
+						// 转化为张数=币的数量/每张币的数量
+						tmpQtyGate := tmpQty / symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(*SymbolGate).QuantoMultiplier
+						// 按张的精度转化，
+						quantityInt64Gate := int64(math.Round(tmpQtyGate))
+						if "LONG" == positionSide {
+
+						} else {
+							quantityInt64Gate = -quantityInt64Gate
+						}
+
+						err = s.pool.Add(ctx, func(ctx context.Context) {
+							//defer wg.Done()
+							current := time.Now()
+							log.Println("当前时间：", current, "用户：", tmpUser.Id)
+
+							endOfMinute := time.Date(
+								current.Year(),
+								current.Month(),
+								current.Day(),
+								current.Hour(),
+								current.Minute(),
+								59, // 秒设置为59
+								0,  // 纳秒设为0
+								current.Location(),
+							)
+							diffMillis := endOfMinute.Sub(current).Milliseconds()
+							diffs := int32(diffMillis / 1000)
+							if 0 >= diffs {
+								diffs = 3
+							}
+
+							var (
+								autoSize   string
+								gateRes    gateapi.FuturesOrder
+								symbolGate = symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(*SymbolGate).Symbol
+							)
+
+							gateRes, err = placeOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, quantityInt64Gate, false, autoSize)
+							if nil != err || 0 >= gateRes.Id {
+								log.Println("OrderAtPlat，Gate下单:", gateRes, quantityInt64Gate, symbolGate)
+								return
+							}
+
+							// 止盈价格
+							var (
+								avgPrice   float64
+								priceFloat float64
+								price      string // 止盈价 委托价格
+								errAA      error
+								rule       int32
+							)
+							avgPrice, errAA = strconv.ParseFloat(gateRes.FillPrice, 64)
+							if nil != errAA {
+								log.Println("下单错误，avgPrive解析失败，gate", errAA)
+								return
+							}
+
+							if "LONG" == positionSide {
+								autoSize = "close_long"
+								rule = 1
+								priceFloat = avgPrice + avgPrice*tmpUser.First
+								//priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
+								price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(SymbolGate).OrderPriceRound, 64)
+								if 0 >= symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(SymbolGate).OrderPriceRound {
+									price = fmt.Sprintf("%d", int64(priceFloat))
+								} else {
+									price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(SymbolGate).OrderPriceRound, 64)
+								}
+
+							} else {
+								autoSize = "close_short"
+								rule = 2
+								priceFloat = avgPrice - avgPrice*tmpUser.First
+								if 0 >= symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(SymbolGate).OrderPriceRound {
+									price = fmt.Sprintf("%d", int64(priceFloat))
+								} else {
+									price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(SymbolGate).OrderPriceRound, 64)
+								}
+							}
+
+							var (
+								gateRes2 gateapi.TriggerOrderResponse
+							)
+							gateRes2, err = placeLimitOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, rule, diffs, price, autoSize)
+							if nil != err || 0 >= gateRes2.Id {
+								log.Println("OrderAtPlat，Gate,限价下单:", gateRes, quantityInt64Gate, symbolGate)
+								return
+							}
+
+							// 过了时间立马平掉
+							if time.Now().After(endOfMinute) {
+							} else {
+								time.Sleep(time.Duration(diffMillis) * time.Millisecond)
+							}
+
+							var (
+								gateRes3 gateapi.FuturesOrder
+							)
+
+							gateRes3, err = placeOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, 0, true, autoSize)
+							if nil != err || 0 >= gateRes3.Id {
+								log.Println("OrderAtPlat，Gate下单，平仓:", gateRes3, quantityInt64Gate, symbolGate)
+								return
+							}
+
+						})
+						if nil != err {
+							fmt.Println("龟兔，添加下单任务异常，新增仓位，错误信息：", err, tmpInsertData, tmpUser)
+						}
+
+					}
 				}
 			}
 
@@ -3725,24 +3909,24 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				// 本次 保证金*50倍/币价格
 				tmpQty = tmpUserBindTradersAmount * float64(tmpUser.BinanceId) / tmpUpdateData.MarkPrice.(float64) // 本次开单数量
 
-				// 精度调整
-				if 0 >= symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
-					quantity = fmt.Sprintf("%d", int64(tmpQty))
-				} else {
-					quantity = strconv.FormatFloat(tmpQty, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, 64)
-				}
-
-				quantityFloat, err = strconv.ParseFloat(quantity, 64)
-				if nil != err {
-					log.Println(err)
-					continue
-				}
-
-				if lessThanOrEqualZero(quantityFloat, 0, 1e-7) {
-					continue
-				}
-
 				if 0 == tmpUser.OrderType {
+					// 精度调整
+					if 0 >= symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
+						quantity = fmt.Sprintf("%d", int64(tmpQty))
+					} else {
+						quantity = strconv.FormatFloat(tmpQty, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, 64)
+					}
+
+					quantityFloat, err = strconv.ParseFloat(quantity, 64)
+					if nil != err {
+						log.Println(err)
+						continue
+					}
+
+					if lessThanOrEqualZero(quantityFloat, 0, 1e-7) {
+						continue
+					}
+
 					err = s.pool.Add(ctx, func(ctx context.Context) {
 						//defer wg.Done()
 
@@ -3780,6 +3964,22 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						log.Println("新，添加下单任务异常，修改仓位，错误信息：", err, traderNum, tmpUpdateData, tmpUser)
 					}
 				} else if 1 == tmpUser.OrderType {
+					// 精度调整
+					if 0 >= symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
+						quantity = fmt.Sprintf("%d", int64(tmpQty))
+					} else {
+						quantity = strconv.FormatFloat(tmpQty, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, 64)
+					}
+
+					quantityFloat, err = strconv.ParseFloat(quantity, 64)
+					if nil != err {
+						log.Println(err)
+						continue
+					}
+
+					if lessThanOrEqualZero(quantityFloat, 0, 1e-7) {
+						continue
+					}
 
 					if _, ok := exchangeInfoTickSize[tmpUpdateData.Symbol.(string)]; !ok {
 						log.Println("龟兔，代币信息无效2，信息", tmpUpdateData, tmpUser)
@@ -3905,6 +4105,125 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 					})
 					if nil != err {
 						fmt.Println("龟兔，添加下单任务异常，新增仓位，错误信息：", err, tmpUpdateData, tmpUser)
+					}
+				} else if 2 == tmpUser.OrderType {
+					if !symbolsMapGate.Contains(tmpUpdateData.Symbol.(string)) {
+						fmt.Println("无效gate代币信息：", err, tmpUser, tmpUpdateData.Symbol.(string))
+					}
+
+					if 0 < symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).QuantoMultiplier {
+						//log.Println("OrderAtPlat，交易对信息错误:", user, currentData, s.SymbolsMap.Get(symbolMapKey).(*entity.LhCoinSymbol))
+
+						// 转化为张数=币的数量/每张币的数量
+						tmpQtyGate := tmpQty / symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).QuantoMultiplier
+						// 按张的精度转化，
+						quantityInt64Gate := int64(math.Round(tmpQtyGate))
+						if "LONG" == positionSide {
+
+						} else {
+							quantityInt64Gate = -quantityInt64Gate
+						}
+
+						err = s.pool.Add(ctx, func(ctx context.Context) {
+							//defer wg.Done()
+							current := time.Now()
+							log.Println("当前时间：", current, "用户：", tmpUser.Id)
+
+							endOfMinute := time.Date(
+								current.Year(),
+								current.Month(),
+								current.Day(),
+								current.Hour(),
+								current.Minute(),
+								59, // 秒设置为59
+								0,  // 纳秒设为0
+								current.Location(),
+							)
+							diffMillis := endOfMinute.Sub(current).Milliseconds()
+							diffs := int32(diffMillis / 1000)
+							if 0 >= diffs {
+								diffs = 3
+							}
+
+							var (
+								autoSize   string
+								gateRes    gateapi.FuturesOrder
+								symbolGate = symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).Symbol
+							)
+
+							gateRes, err = placeOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, quantityInt64Gate, false, autoSize)
+							if nil != err || 0 >= gateRes.Id {
+								log.Println("OrderAtPlat，Gate下单:", gateRes, quantityInt64Gate, symbolGate)
+								return
+							}
+
+							// 止盈价格
+							var (
+								avgPrice   float64
+								priceFloat float64
+								price      string // 止盈价 委托价格
+								errAA      error
+								rule       int32
+							)
+							avgPrice, errAA = strconv.ParseFloat(gateRes.FillPrice, 64)
+							if nil != errAA {
+								log.Println("下单错误，avgPrive解析失败，gate", errAA)
+								return
+							}
+
+							if "LONG" == positionSide {
+								autoSize = "close_long"
+								rule = 1
+								priceFloat = avgPrice + avgPrice*tmpUser.First
+								//priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
+								price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(SymbolGate).OrderPriceRound, 64)
+								if 0 >= symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(SymbolGate).OrderPriceRound {
+									price = fmt.Sprintf("%d", int64(priceFloat))
+								} else {
+									price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(SymbolGate).OrderPriceRound, 64)
+								}
+
+							} else {
+								autoSize = "close_short"
+								rule = 2
+								priceFloat = avgPrice - avgPrice*tmpUser.First
+								if 0 >= symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(SymbolGate).OrderPriceRound {
+									price = fmt.Sprintf("%d", int64(priceFloat))
+								} else {
+									price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(SymbolGate).OrderPriceRound, 64)
+								}
+							}
+
+							var (
+								gateRes2 gateapi.TriggerOrderResponse
+							)
+							gateRes2, err = placeLimitOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, rule, diffs, price, autoSize)
+							if nil != err || 0 >= gateRes2.Id {
+								log.Println("OrderAtPlat，Gate,限价下单:", gateRes, quantityInt64Gate, symbolGate)
+								return
+							}
+
+							// 过了时间立马平掉
+							if time.Now().After(endOfMinute) {
+							} else {
+								time.Sleep(time.Duration(diffMillis) * time.Millisecond)
+							}
+
+							var (
+								gateRes3 gateapi.FuturesOrder
+							)
+
+							gateRes3, err = placeOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, 0, true, autoSize)
+							if nil != err || 0 >= gateRes3.Id {
+								log.Println("OrderAtPlat，Gate下单，平仓:", gateRes3, quantityInt64Gate, symbolGate)
+								return
+							}
+
+						})
+						if nil != err {
+							fmt.Println("龟兔，添加下单任务异常，新增仓位，错误信息：", err, tmpUpdateData, tmpUser)
+						}
+
 					}
 				}
 			}
@@ -5578,4 +5897,112 @@ func getBinanceFuturesPairs() ([]*BinanceSymbolInfo, error) {
 	}
 
 	return exchangeInfo.Symbols, nil
+}
+
+// GetGateContract 获取合约账号信息
+func getGateContract() ([]gateapi.Contract, error) {
+	client := gateapi.NewAPIClient(gateapi.NewConfiguration())
+	// uncomment the next line if your are testing against testnet
+	// client.ChangeBasePath("https://fx-api-testnet.gateio.ws/api/v4")
+	ctx := context.WithValue(context.Background(),
+		gateapi.ContextGateAPIV4,
+		gateapi.GateAPIV4{},
+	)
+
+	result, _, err := client.FuturesApi.ListFuturesContracts(ctx, "usdt", &gateapi.ListFuturesContractsOpts{})
+	if err != nil {
+		var e gateapi.GateAPIError
+		if errors.As(err, &e) {
+			log.Println("gate api error: ", e.Error())
+			return result, err
+		}
+	}
+
+	return result, nil
+}
+
+// PlaceOrderGate places an order on the Gate.io API with dynamic parameters
+func placeOrderGate(apiK, apiS, contract string, size int64, reduceOnly bool, autoSize string) (gateapi.FuturesOrder, error) {
+	client := gateapi.NewAPIClient(gateapi.NewConfiguration())
+	// uncomment the next line if your are testing against testnet
+	// client.ChangeBasePath("https://fx-api-testnet.gateio.ws/api/v4")
+	ctx := context.WithValue(context.Background(),
+		gateapi.ContextGateAPIV4,
+		gateapi.GateAPIV4{
+			Key:    apiK,
+			Secret: apiS,
+		},
+	)
+
+	order := gateapi.FuturesOrder{
+		Contract: contract,
+		Size:     size,
+		Tif:      "ioc",
+		Price:    "0",
+	}
+
+	if autoSize != "" {
+		order.AutoSize = autoSize
+	}
+
+	// 如果 reduceOnly 为 true，添加到请求数据中
+	if reduceOnly {
+		order.ReduceOnly = reduceOnly
+	}
+
+	result, _, err := client.FuturesApi.CreateFuturesOrder(ctx, "usdt", order)
+
+	if err != nil {
+		var e gateapi.GateAPIError
+		if errors.As(err, &e) {
+			log.Println("gate api error: ", e.Error())
+			return result, err
+		}
+	}
+
+	return result, nil
+}
+
+func placeLimitOrderGate(apiK, apiS, contract string, rule, timeLimit int32, price string, autoSize string) (gateapi.TriggerOrderResponse, error) {
+	client := gateapi.NewAPIClient(gateapi.NewConfiguration())
+	ctx := context.WithValue(context.Background(),
+		gateapi.ContextGateAPIV4,
+		gateapi.GateAPIV4{
+			Key:    apiK,
+			Secret: apiS,
+		},
+	)
+
+	order := gateapi.FuturesPriceTriggeredOrder{
+		Initial: gateapi.FuturesInitialOrder{
+			Contract:     contract,
+			Size:         0,
+			Price:        price,
+			Tif:          "gtc",
+			ReduceOnly:   true,
+			AutoSize:     autoSize,
+			IsReduceOnly: true,
+			IsClose:      true,
+		},
+		Trigger: gateapi.FuturesPriceTrigger{
+			StrategyType: 0,
+			PriceType:    0,
+			Price:        price,
+			Rule:         rule,
+			Expiration:   timeLimit,
+		},
+	}
+
+	result, _, err := client.FuturesApi.CreatePriceTriggeredOrder(ctx, "usdt", order)
+
+	if err != nil {
+		var e gateapi.GateAPIError
+		if errors.As(err, &e) {
+			log.Println("gate api error: ", e.Error())
+			return result, err
+		}
+		return result, err
+	}
+
+	return result, nil
 }

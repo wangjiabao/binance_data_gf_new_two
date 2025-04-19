@@ -3,6 +3,7 @@ module binance_data_gf
 go 1.21
 
 require (
+	github.com/gateio/gateapi-go/v6 v6.71.0
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.7.1
 	github.com/gogf/gf/v2 v2.7.1
 )
@@ -10,6 +11,7 @@ require (
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
+	github.com/antihax/optional v1.0.0 // indirect
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
 	github.com/fatih/color v1.17.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
