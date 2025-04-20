@@ -3747,7 +3747,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 								rule = 1
 								priceFloat = avgPrice + avgPrice*tmpUser.First
 								//priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
-								price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(*SymbolGate).OrderPriceRound, 64)
 								if 0 >= symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(*SymbolGate).OrderPriceRound {
 									price = fmt.Sprintf("%d", int64(priceFloat))
 								} else {
@@ -4178,7 +4177,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 								rule = 1
 								priceFloat = avgPrice + avgPrice*tmpUser.First
 								//priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
-								price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).OrderPriceRound, 64)
+								//price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).OrderPriceRound, 64)
 								if 0 >= symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).OrderPriceRound {
 									price = fmt.Sprintf("%d", int64(priceFloat))
 								} else {
