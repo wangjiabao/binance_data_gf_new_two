@@ -3679,6 +3679,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				} else if 2 == tmpUser.OrderType {
 					if !symbolsMapGate.Contains(tmpInsertData.Symbol.(string)) {
 						fmt.Println("无效gate代币信息：", err, tmpUser, tmpInsertData.Symbol.(string))
+						continue
 					}
 
 					if 0 < symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(*SymbolGate).QuantoMultiplier {
@@ -4109,6 +4110,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				} else if 2 == tmpUser.OrderType {
 					if !symbolsMapGate.Contains(tmpUpdateData.Symbol.(string)) {
 						fmt.Println("无效gate代币信息：", err, tmpUser, tmpUpdateData.Symbol.(string))
+						continue
 					}
 
 					if 0 < symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).QuantoMultiplier {
