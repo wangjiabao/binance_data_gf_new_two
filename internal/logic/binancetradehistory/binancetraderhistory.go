@@ -3527,7 +3527,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							return
 						}
 
-						log.Println("新，新增仓位，完成：", err, traderNum, tmpInsertData, tmpUser)
+						log.Println("新，新增仓位，完成：", err, quantity, tmpUser.Id)
 						return
 					})
 					if nil != err {
@@ -3631,6 +3631,17 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							time.Sleep(time.Duration(diffMillis) * time.Millisecond)
 						}
 
+						var (
+							binanceOrderRes3 *binanceOrder
+							orderInfoRes3    *orderInfo
+							errC             error
+						)
+						// 请求下单
+						binanceOrderRes3, orderInfoRes3, errC = requestBinanceOrder(tmpInsertData.Symbol.(string), stopSide, orderType, positionSide, quantity, tmpUser.ApiKey, tmpUser.ApiSecret)
+						if nil != errC || binanceOrderRes3.OrderId <= 0 {
+							log.Println("龟兔，关仓，信息：", errC, binanceOrderRes3, orderInfoRes3, tmpInsertData, stopSide, orderType, positionSide, quantity, tmpUser.Id)
+						}
+
 						// 查询进度
 						var (
 							orderBinanceInfo *binanceOrder
@@ -3639,22 +3650,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						orderBinanceInfo, errCC = requestBinanceOrderInfo(tmpInsertData.Symbol.(string), strconv.FormatUint(uint64(binanceOrderRes2.OrderId), 10), tmpUser.ApiKey, tmpUser.ApiSecret)
 						if nil != errCC || nil == orderBinanceInfo {
 							fmt.Println("查询止盈单信息失败：", orderBinanceInfo, errCC, tmpInsertData.Symbol.(string), binanceOrderRes2.OrderId)
-						}
-
-						if binanceOrderRes2.OrderId > 0 && 0 < len(orderBinanceInfo.Status) && "NEW" != orderBinanceInfo.Status {
-							// 已经止盈
-
-						} else {
-							var (
-								binanceOrderRes3 *binanceOrder
-								orderInfoRes3    *orderInfo
-								errC             error
-							)
-							// 请求下单
-							binanceOrderRes3, orderInfoRes3, errC = requestBinanceOrder(tmpInsertData.Symbol.(string), stopSide, orderType, positionSide, quantity, tmpUser.ApiKey, tmpUser.ApiSecret)
-							if nil != errC || binanceOrderRes3.OrderId <= 0 {
-								log.Println("龟兔，关仓，信息：", errC, binanceOrderRes3, orderInfoRes3, tmpInsertData, stopSide, orderType, positionSide, quantity, tmpUser.Id)
-							}
 						}
 
 						// 未变化，撤销订单
@@ -3670,7 +3665,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							}
 						}
 
-						log.Println("新，新增仓位，完成：", err, traderNum, tmpInsertData, tmpUser)
+						log.Println("新，新增仓位，完成：", err, quantity, tmpUser.Id)
 						return
 					})
 					if nil != err {
@@ -3789,6 +3784,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 								return
 							}
 
+							log.Println("新，新增仓位，完成：", err, quantity, tmpUser.Id)
 						})
 						if nil != err {
 							fmt.Println("龟兔，添加下单任务异常，新增仓位，错误信息：", err, tmpInsertData, tmpUser)
@@ -3957,7 +3953,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							return
 						}
 
-						log.Println("新，更新仓位，完成：", err, traderNum, tmpUpdateData, tmpUser)
+						log.Println("新，更新仓位，完成：", quantity, tmpUser.Id)
 						return
 					})
 					if nil != err {
@@ -4061,6 +4057,17 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							time.Sleep(time.Duration(diffMillis) * time.Millisecond)
 						}
 
+						var (
+							binanceOrderRes3 *binanceOrder
+							orderInfoRes3    *orderInfo
+							errC             error
+						)
+						// 请求下单
+						binanceOrderRes3, orderInfoRes3, errC = requestBinanceOrder(tmpUpdateData.Symbol.(string), stopSide, orderType, positionSide, quantity, tmpUser.ApiKey, tmpUser.ApiSecret)
+						if nil != errC || binanceOrderRes3.OrderId <= 0 {
+							log.Println("龟兔，关仓，信息：", errC, binanceOrderRes3, orderInfoRes3, tmpUpdateData, stopSide, orderType, positionSide, quantity, tmpUser.Id)
+						}
+
 						// 查询进度
 						var (
 							orderBinanceInfo *binanceOrder
@@ -4069,22 +4076,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						orderBinanceInfo, errCC = requestBinanceOrderInfo(tmpUpdateData.Symbol.(string), strconv.FormatUint(uint64(binanceOrderRes2.OrderId), 10), tmpUser.ApiKey, tmpUser.ApiSecret)
 						if nil != errCC || nil == orderBinanceInfo {
 							fmt.Println("查询止盈单信息失败：", orderBinanceInfo, errCC, tmpUpdateData.Symbol.(string), binanceOrderRes2.OrderId)
-						}
-
-						if binanceOrderRes2.OrderId > 0 && 0 < len(orderBinanceInfo.Status) && "NEW" != orderBinanceInfo.Status {
-							// 已经止盈
-
-						} else {
-							var (
-								binanceOrderRes3 *binanceOrder
-								orderInfoRes3    *orderInfo
-								errC             error
-							)
-							// 请求下单
-							binanceOrderRes3, orderInfoRes3, errC = requestBinanceOrder(tmpUpdateData.Symbol.(string), stopSide, orderType, positionSide, quantity, tmpUser.ApiKey, tmpUser.ApiSecret)
-							if nil != errC || binanceOrderRes3.OrderId <= 0 {
-								log.Println("龟兔，关仓，信息：", errC, binanceOrderRes3, orderInfoRes3, tmpUpdateData, stopSide, orderType, positionSide, quantity, tmpUser.Id)
-							}
 						}
 
 						// 未变化，撤销订单
@@ -4100,7 +4091,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							}
 						}
 
-						log.Println("新，更新仓位，完成：", err, traderNum, tmpUpdateData, tmpUser)
+						log.Println("新，更新仓位，完成：", err, quantity, tmpUser.Id)
 						return
 					})
 					if nil != err {
@@ -4220,9 +4211,10 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 								return
 							}
 
+							log.Println("新，更新仓位，完成：", err, quantity, tmpUser.Id)
 						})
 						if nil != err {
-							fmt.Println("龟兔，添加下单任务异常，新增仓位，错误信息：", err, tmpUpdateData, tmpUser)
+							fmt.Println("龟兔，添加下单任务异常，新增仓位，错误信息：", err, quantity, tmpUser.Id)
 						}
 
 					}
