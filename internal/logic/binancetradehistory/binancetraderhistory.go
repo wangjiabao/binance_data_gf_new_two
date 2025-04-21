@@ -3765,8 +3765,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							)
 							gateRes2, err = placeLimitOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, rule, diffs, price, autoSize)
 							if nil != err || 0 >= gateRes2.Id {
-								log.Println("OrderAtPlat，Gate,限价下单:", gateRes, quantityInt64Gate, symbolGate)
-								return
+								log.Println("OrderAtPlat，Gate,限价下单:", gateRes2, quantityInt64Gate, symbolGate)
 							}
 
 							// 过了时间立马平掉
@@ -3782,7 +3781,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							gateRes3, err = placeOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, 0, true, autoSize)
 							if nil != err || 0 >= gateRes3.Id {
 								log.Println("OrderAtPlat，Gate下单，平仓:", gateRes3, quantityInt64Gate, symbolGate)
-								return
 							}
 
 							log.Println("新，新增仓位，完成：", err, quantity, tmpUser.Id)
@@ -4192,8 +4190,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							)
 							gateRes2, err = placeLimitOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, rule, diffs, price, autoSize)
 							if nil != err || 0 >= gateRes2.Id {
-								log.Println("OrderAtPlat，Gate,限价下单:", gateRes, quantityInt64Gate, symbolGate)
-								return
+								log.Println("OrderAtPlat，Gate,限价下单:", gateRes2, quantityInt64Gate, symbolGate)
 							}
 
 							// 过了时间立马平掉
@@ -4209,7 +4206,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							gateRes3, err = placeOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, 0, true, autoSize)
 							if nil != err || 0 >= gateRes3.Id {
 								log.Println("OrderAtPlat，Gate下单，平仓:", gateRes3, quantityInt64Gate, symbolGate)
-								return
 							}
 
 							log.Println("新，更新仓位，完成：", err, quantity, tmpUser.Id)
