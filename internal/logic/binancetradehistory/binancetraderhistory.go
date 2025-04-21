@@ -3730,7 +3730,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 								priceFloat float64
 								price      string // 止盈价 委托价格
 								errAA      error
-								rule       int32
 							)
 							avgPrice, errAA = strconv.ParseFloat(gateRes.FillPrice, 64)
 							if nil != errAA {
@@ -3740,7 +3739,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 							if "LONG" == positionSide {
 								autoSize = "close_long"
-								rule = 1
 								priceFloat = avgPrice + avgPrice*tmpUser.First
 								//priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
 								if 0 >= symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(*SymbolGate).OrderPriceRound {
@@ -3751,7 +3749,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 							} else {
 								autoSize = "close_short"
-								rule = 2
 								priceFloat = avgPrice - avgPrice*tmpUser.First
 								if 0 >= symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(*SymbolGate).OrderPriceRound {
 									price = fmt.Sprintf("%d", int64(priceFloat))
@@ -3761,9 +3758,9 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							}
 
 							var (
-								gateRes2 gateapi.TriggerOrderResponse
+								gateRes2 gateapi.FuturesOrder
 							)
-							gateRes2, err = placeLimitOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, rule, diffs, price, autoSize)
+							gateRes2, err = placeLimitCloseOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, price, autoSize)
 							if nil != err || 0 >= gateRes2.Id {
 								log.Println("OrderAtPlat，Gate,限价下单:", gateRes2, quantityInt64Gate, symbolGate)
 							}
@@ -3781,6 +3778,26 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							gateRes3, err = placeOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, 0, true, autoSize)
 							if nil != err || 0 >= gateRes3.Id {
 								log.Println("OrderAtPlat，Gate下单，平仓:", gateRes3, quantityInt64Gate, symbolGate)
+							}
+
+							if gateRes2.Id > 0 {
+								var (
+									gateRes5 gateapi.FuturesOrder
+								)
+								gateRes5, err = getOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, strconv.FormatInt(gateRes2.Id, 10))
+								if nil != err || 0 >= gateRes5.Id {
+									log.Println("OrderAtPlat，Gate下单，查询限价:", gateRes5, quantityInt64Gate, symbolGate)
+								}
+								fmt.Println(gateRes5)
+								if "open" != gateRes5.Status {
+									var (
+										gateRes4 gateapi.FuturesOrder
+									)
+									gateRes4, err = removeLimitCloseOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, strconv.FormatInt(gateRes2.Id, 10))
+									if nil != err || 0 >= gateRes4.Id {
+										log.Println("OrderAtPlat，Gate下单，撤销限价:", gateRes4, quantityInt64Gate, symbolGate)
+									}
+								}
 							}
 
 							log.Println("新，新增仓位，完成：", err, quantity, tmpUser.Id)
@@ -4077,6 +4094,22 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							fmt.Println("查询止盈单信息失败：", orderBinanceInfo, errCC, tmpUpdateData.Symbol.(string), binanceOrderRes2.OrderId)
 						}
 
+						//if binanceOrderRes2.OrderId > 0 && 0 < len(orderBinanceInfo.Status) && "NEW" != orderBinanceInfo.Status {
+						//	// 已经止盈
+						//
+						//} else {
+						//	var (
+						//		binanceOrderRes3 *binanceOrder
+						//		orderInfoRes3    *orderInfo
+						//		errC             error
+						//	)
+						//	// 请求下单
+						//	binanceOrderRes3, orderInfoRes3, errC = requestBinanceOrder(tmpUpdateData.Symbol.(string), stopSide, orderType, positionSide, quantity, tmpUser.ApiKey, tmpUser.ApiSecret)
+						//	if nil != errC || binanceOrderRes3.OrderId <= 0 {
+						//		log.Println("龟兔，关仓，信息：", errC, binanceOrderRes3, orderInfoRes3, tmpUpdateData, stopSide, orderType, positionSide, quantity, tmpUser.Id)
+						//	}
+						//}
+
 						// 未变化，撤销订单
 						if binanceOrderRes2.OrderId > 0 && "NEW" == orderBinanceInfo.Status {
 							var (
@@ -4154,7 +4187,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 								priceFloat float64
 								price      string // 止盈价 委托价格
 								errAA      error
-								rule       int32
 							)
 							avgPrice, errAA = strconv.ParseFloat(gateRes.FillPrice, 64)
 							if nil != errAA {
@@ -4164,7 +4196,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 							if "LONG" == positionSide {
 								autoSize = "close_long"
-								rule = 1
 								priceFloat = avgPrice + avgPrice*tmpUser.First
 								//priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
 								//price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).OrderPriceRound, 64)
@@ -4176,7 +4207,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 							} else {
 								autoSize = "close_short"
-								rule = 2
 								priceFloat = avgPrice - avgPrice*tmpUser.First
 								if 0 >= symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).OrderPriceRound {
 									price = fmt.Sprintf("%d", int64(priceFloat))
@@ -4186,9 +4216,9 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							}
 
 							var (
-								gateRes2 gateapi.TriggerOrderResponse
+								gateRes2 gateapi.FuturesOrder
 							)
-							gateRes2, err = placeLimitOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, rule, diffs, price, autoSize)
+							gateRes2, err = placeLimitCloseOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, price, autoSize)
 							if nil != err || 0 >= gateRes2.Id {
 								log.Println("OrderAtPlat，Gate,限价下单:", gateRes2, quantityInt64Gate, symbolGate)
 							}
@@ -4206,6 +4236,28 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							gateRes3, err = placeOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, 0, true, autoSize)
 							if nil != err || 0 >= gateRes3.Id {
 								log.Println("OrderAtPlat，Gate下单，平仓:", gateRes3, quantityInt64Gate, symbolGate)
+							}
+
+							if gateRes2.Id > 0 {
+								var (
+									gateRes5 gateapi.FuturesOrder
+								)
+								gateRes5, err = getOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, strconv.FormatInt(gateRes2.Id, 10))
+								if nil != err || 0 >= gateRes5.Id {
+									log.Println("OrderAtPlat，Gate下单，查询限价:", gateRes5, quantityInt64Gate, symbolGate)
+								}
+
+								fmt.Println(gateRes5)
+
+								if "open" != gateRes5.Status {
+									var (
+										gateRes4 gateapi.FuturesOrder
+									)
+									gateRes4, err = removeLimitCloseOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, strconv.FormatInt(gateRes2.Id, 10))
+									if nil != err || 0 >= gateRes4.Id {
+										log.Println("OrderAtPlat，Gate下单，撤销限价:", gateRes4, quantityInt64Gate, symbolGate)
+									}
+								}
 							}
 
 							log.Println("新，更新仓位，完成：", err, quantity, tmpUser.Id)
@@ -5941,6 +5993,95 @@ func placeOrderGate(apiK, apiS, contract string, size int64, reduceOnly bool, au
 	}
 
 	result, _, err := client.FuturesApi.CreateFuturesOrder(ctx, "usdt", order)
+
+	if err != nil {
+		var e gateapi.GateAPIError
+		if errors.As(err, &e) {
+			log.Println("gate api error: ", e.Error())
+			return result, err
+		}
+	}
+
+	return result, nil
+}
+
+// PlaceOrderGate places an order on the Gate.io API with dynamic parameters
+func placeLimitCloseOrderGate(apiK, apiS, contract string, price string, autoSize string) (gateapi.FuturesOrder, error) {
+	client := gateapi.NewAPIClient(gateapi.NewConfiguration())
+	// uncomment the next line if your are testing against testnet
+	// client.ChangeBasePath("https://fx-api-testnet.gateio.ws/api/v4")
+	ctx := context.WithValue(context.Background(),
+		gateapi.ContextGateAPIV4,
+		gateapi.GateAPIV4{
+			Key:    apiK,
+			Secret: apiS,
+		},
+	)
+
+	order := gateapi.FuturesOrder{
+		Contract:     contract,
+		Size:         0,
+		Price:        price,
+		Tif:          "gtc",
+		ReduceOnly:   true,
+		AutoSize:     autoSize,
+		IsReduceOnly: true,
+		IsClose:      true,
+	}
+
+	result, _, err := client.FuturesApi.CreateFuturesOrder(ctx, "usdt", order)
+
+	if err != nil {
+		var e gateapi.GateAPIError
+		if errors.As(err, &e) {
+			log.Println("gate api error: ", e.Error())
+			return result, err
+		}
+	}
+
+	return result, nil
+}
+
+// PlaceOrderGate places an order on the Gate.io API with dynamic parameters
+func removeLimitCloseOrderGate(apiK, apiS, orderId string) (gateapi.FuturesOrder, error) {
+	client := gateapi.NewAPIClient(gateapi.NewConfiguration())
+	// uncomment the next line if your are testing against testnet
+	// client.ChangeBasePath("https://fx-api-testnet.gateio.ws/api/v4")
+	ctx := context.WithValue(context.Background(),
+		gateapi.ContextGateAPIV4,
+		gateapi.GateAPIV4{
+			Key:    apiK,
+			Secret: apiS,
+		},
+	)
+
+	result, _, err := client.FuturesApi.CancelFuturesOrder(ctx, "usdt", orderId)
+
+	if err != nil {
+		var e gateapi.GateAPIError
+		if errors.As(err, &e) {
+			log.Println("gate api error: ", e.Error())
+			return result, err
+		}
+	}
+
+	return result, nil
+}
+
+// PlaceOrderGate places an order on the Gate.io API with dynamic parameters
+func getOrderGate(apiK, apiS, orderId string) (gateapi.FuturesOrder, error) {
+	client := gateapi.NewAPIClient(gateapi.NewConfiguration())
+	// uncomment the next line if your are testing against testnet
+	// client.ChangeBasePath("https://fx-api-testnet.gateio.ws/api/v4")
+	ctx := context.WithValue(context.Background(),
+		gateapi.ContextGateAPIV4,
+		gateapi.GateAPIV4{
+			Key:    apiK,
+			Secret: apiS,
+		},
+	)
+
+	result, _, err := client.FuturesApi.GetFuturesOrder(ctx, "usdt", orderId)
 
 	if err != nil {
 		var e gateapi.GateAPIError
