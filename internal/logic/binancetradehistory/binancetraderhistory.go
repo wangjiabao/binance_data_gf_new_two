@@ -3045,12 +3045,13 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 	exMap := make(map[string]bool, 0)
 	exMap["ETHUSDT"] = true
 	exMap["BTCUSDT"] = true
-	exMap["PEPEUSDT"] = true
+	exMap["1000PEPEUSDT"] = true
 	exMap["SOLUSDT"] = true
 	exMap["FILUSDT"] = true
 	exMap["DOGEUSDT"] = true
-	exMap["ADAUSDT"] = true
+	exMap["1000SHIBIUSDT"] = true
 	exMap["BNBUSDT"] = true
+	exMap["LTCUSDT"] = true
 
 	// 执行
 	for {
