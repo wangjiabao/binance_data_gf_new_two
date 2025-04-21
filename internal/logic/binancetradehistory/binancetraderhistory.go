@@ -3780,27 +3780,28 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 								log.Println("OrderAtPlat，Gate下单，平仓:", gateRes3, quantityInt64Gate, symbolGate)
 							}
 
-							if gateRes2.Id > 0 {
-								var (
-									gateRes5 gateapi.FuturesOrder
-								)
-								gateRes5, err = getOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, strconv.FormatInt(gateRes2.Id, 10))
-								if nil != err || 0 >= gateRes5.Id {
-									log.Println("OrderAtPlat，Gate下单，查询限价:", gateRes5, quantityInt64Gate, symbolGate)
-								}
-								fmt.Println(gateRes5)
-								//if "open" == gateRes5.Status {
-								//	var (
-								//		gateRes4 gateapi.FuturesOrder
-								//	)
-								//	gateRes4, err = removeLimitCloseOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, strconv.FormatInt(gateRes2.Id, 10))
-								//	if nil != err || 0 >= gateRes4.Id {
-								//		log.Println("OrderAtPlat，Gate下单，撤销限价:", gateRes4, quantityInt64Gate, symbolGate)
-								//	}
-								//}
-							}
+							//if gateRes2.Id > 0 {
+							//	var (
+							//		gateRes5 gateapi.FuturesOrder
+							//	)
+							//	gateRes5, err = getOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, strconv.FormatInt(gateRes2.Id, 10))
+							//	if nil != err || 0 >= gateRes5.Id {
+							//		log.Println("OrderAtPlat，Gate下单，查询限价:", gateRes5, quantityInt64Gate, symbolGate)
+							//	}
+							//	fmt.Println(gateRes5)
+							//	if "open" == gateRes5.Status {
+							//		var (
+							//			gateRes4 gateapi.FuturesOrder
+							//		)
+							//		gateRes4, err = removeLimitCloseOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, strconv.FormatInt(gateRes2.Id, 10))
+							//		if nil != err || 0 >= gateRes4.Id {
+							//			log.Println("OrderAtPlat，Gate下单，撤销限价:", gateRes4, quantityInt64Gate, symbolGate)
+							//		}
+							//	}
+							//}
 
 							log.Println("新，新增仓位，完成：", err, quantityInt64Gate, tmpUser.Id)
+							return
 						})
 						if nil != err {
 							fmt.Println("龟兔，添加下单任务异常，新增仓位，错误信息：", err, tmpInsertData, tmpUser)
@@ -4238,29 +4239,30 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 								log.Println("OrderAtPlat，Gate下单，平仓:", gateRes3, quantityInt64Gate, symbolGate)
 							}
 
-							if gateRes2.Id > 0 {
-								var (
-									gateRes5 gateapi.FuturesOrder
-								)
-								gateRes5, err = getOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, strconv.FormatInt(gateRes2.Id, 10))
-								if nil != err || 0 >= gateRes5.Id {
-									log.Println("OrderAtPlat，Gate下单，查询限价:", gateRes5, quantityInt64Gate, symbolGate)
-								}
-
-								fmt.Println(gateRes5)
-
-								//if "open" == gateRes5.Status {
-								//	var (
-								//		gateRes4 gateapi.FuturesOrder
-								//	)
-								//	gateRes4, err = removeLimitCloseOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, strconv.FormatInt(gateRes2.Id, 10))
-								//	if nil != err || 0 >= gateRes4.Id {
-								//		log.Println("OrderAtPlat，Gate下单，撤销限价:", gateRes4, quantityInt64Gate, symbolGate)
-								//	}
-								//}
-							}
+							//if gateRes2.Id > 0 {
+							//	var (
+							//		gateRes5 gateapi.FuturesOrder
+							//	)
+							//	gateRes5, err = getOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, strconv.FormatInt(gateRes2.Id, 10))
+							//	if nil != err || 0 >= gateRes5.Id {
+							//		log.Println("OrderAtPlat，Gate下单，查询限价:", gateRes5, quantityInt64Gate, symbolGate)
+							//	}
+							//
+							//	fmt.Println(gateRes5)
+							//
+							//	if "open" == gateRes5.Status {
+							//		var (
+							//			gateRes4 gateapi.FuturesOrder
+							//		)
+							//		gateRes4, err = removeLimitCloseOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, strconv.FormatInt(gateRes2.Id, 10))
+							//		if nil != err || 0 >= gateRes4.Id {
+							//			log.Println("OrderAtPlat，Gate下单，撤销限价:", gateRes4, quantityInt64Gate, symbolGate)
+							//		}
+							//	}
+							//}
 
 							log.Println("新，更新仓位，完成：", err, quantity, tmpUser.Id)
+							return
 						})
 						if nil != err {
 							fmt.Println("龟兔，添加下单任务异常，新增仓位，错误信息：", err, quantityInt64Gate, tmpUser.Id)
