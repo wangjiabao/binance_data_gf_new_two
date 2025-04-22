@@ -3737,25 +3737,25 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							//	return
 							//}
 							//
-							//if "LONG" == positionSide {
-							//	autoSize = "close_long"
-							//	priceFloat = avgPrice + avgPrice*tmpUser.First
-							//	//priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
-							//	if 0 >= symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(*SymbolGate).OrderPriceRound {
-							//		price = fmt.Sprintf("%d", int64(priceFloat))
-							//	} else {
-							//		price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(*SymbolGate).OrderPriceRound, 64)
-							//	}
-							//
-							//} else {
-							//	autoSize = "close_short"
-							//	priceFloat = avgPrice - avgPrice*tmpUser.First
-							//	if 0 >= symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(*SymbolGate).OrderPriceRound {
-							//		price = fmt.Sprintf("%d", int64(priceFloat))
-							//	} else {
-							//		price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(*SymbolGate).OrderPriceRound, 64)
-							//	}
-							//}
+							if "LONG" == positionSide {
+								autoSize = "close_long"
+								//	priceFloat = avgPrice + avgPrice*tmpUser.First
+								//	//priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
+								//	if 0 >= symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(*SymbolGate).OrderPriceRound {
+								//		price = fmt.Sprintf("%d", int64(priceFloat))
+								//	} else {
+								//		price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(*SymbolGate).OrderPriceRound, 64)
+								//	}
+								//
+							} else {
+								autoSize = "close_short"
+								//	priceFloat = avgPrice - avgPrice*tmpUser.First
+								//	if 0 >= symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(*SymbolGate).OrderPriceRound {
+								//		price = fmt.Sprintf("%d", int64(priceFloat))
+								//	} else {
+								//		price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpInsertData.Symbol.(string)).(*SymbolGate).OrderPriceRound, 64)
+								//	}
+							}
 							//
 							//var (
 							//	gateRes2 gateapi.FuturesOrder
@@ -4195,34 +4195,34 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							//	return
 							//}
 							//
-							//if "LONG" == positionSide {
-							//	autoSize = "close_long"
-							//	priceFloat = avgPrice + avgPrice*tmpUser.First
-							//	//priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
-							//	//price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).OrderPriceRound, 64)
-							//	if 0 >= symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).OrderPriceRound {
-							//		price = fmt.Sprintf("%d", int64(priceFloat))
-							//	} else {
-							//		price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).OrderPriceRound, 64)
-							//	}
-							//
-							//} else {
-							//	autoSize = "close_short"
-							//	priceFloat = avgPrice - avgPrice*tmpUser.First
-							//	if 0 >= symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).OrderPriceRound {
-							//		price = fmt.Sprintf("%d", int64(priceFloat))
-							//	} else {
-							//		price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).OrderPriceRound, 64)
-							//	}
-							//}
-							//
-							//var (
-							//	gateRes2 gateapi.FuturesOrder
-							//)
-							//gateRes2, err = placeLimitCloseOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, price, autoSize)
-							//if nil != err || 0 >= gateRes2.Id {
-							//	log.Println("OrderAtPlat，Gate,限价下单:", gateRes2, quantityInt64Gate, symbolGate)
-							//}
+							if "LONG" == positionSide {
+								autoSize = "close_long"
+								//	priceFloat = avgPrice + avgPrice*tmpUser.First
+								//	//priceFloat = math.Round(priceFloat/exchangeInfoTickSize[tmpInsertData.Symbol.(string)]) * exchangeInfoTickSize[tmpInsertData.Symbol.(string)]
+								//	//price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).OrderPriceRound, 64)
+								//	if 0 >= symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).OrderPriceRound {
+								//		price = fmt.Sprintf("%d", int64(priceFloat))
+								//	} else {
+								//		price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).OrderPriceRound, 64)
+								//	}
+								//
+							} else {
+								autoSize = "close_short"
+								//	priceFloat = avgPrice - avgPrice*tmpUser.First
+								//	if 0 >= symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).OrderPriceRound {
+								//		price = fmt.Sprintf("%d", int64(priceFloat))
+								//	} else {
+								//		price = strconv.FormatFloat(priceFloat, 'f', symbolsMapGate.Get(tmpUpdateData.Symbol.(string)).(*SymbolGate).OrderPriceRound, 64)
+								//	}
+								//}
+								//
+								//var (
+								//	gateRes2 gateapi.FuturesOrder
+								//)
+								//gateRes2, err = placeLimitCloseOrderGate(tmpUser.ApiKey, tmpUser.ApiSecret, symbolGate, price, autoSize)
+								//if nil != err || 0 >= gateRes2.Id {
+								//	log.Println("OrderAtPlat，Gate,限价下单:", gateRes2, quantityInt64Gate, symbolGate)
+							}
 
 							// 过了时间立马平掉
 							if time.Now().After(endOfMinute) {
