@@ -3052,6 +3052,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 	exMap["1000SHIBIUSDT"] = true
 	exMap["BNBUSDT"] = true
 	exMap["LTCUSDT"] = true
+	exMap["XRPUSDT"] = true
 
 	// 执行
 	for {
