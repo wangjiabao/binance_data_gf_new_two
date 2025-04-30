@@ -3569,16 +3569,22 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						current := time.Now()
 						log.Println("当前时间：", current, "用户：", tmpUser.Id)
 
+						tmpSecond := 59
+						if 1 <= tmpUser.First {
+							tmpSecond = 57
+						}
+
 						endOfMinute := time.Date(
 							current.Year(),
 							current.Month(),
 							current.Day(),
 							current.Hour(),
 							current.Minute(),
-							59, // 秒设置为59
-							0,  // 纳秒设为0
+							tmpSecond, // 秒设置为59
+							0,         // 纳秒设为0
 							current.Location(),
 						)
+
 						diffMillis := endOfMinute.Sub(current).Milliseconds()
 
 						var (
@@ -3628,9 +3634,11 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						//}
 
 						// 过了时间立马平掉
-						if time.Now().After(endOfMinute) {
-						} else {
-							time.Sleep(time.Duration(diffMillis) * time.Millisecond)
+						if 0 < diffMillis {
+							if time.Now().After(endOfMinute) {
+							} else {
+								time.Sleep(time.Duration(diffMillis) * time.Millisecond)
+							}
 						}
 
 						var (
@@ -4011,14 +4019,19 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						current := time.Now()
 						log.Println("当前时间：", current, "用户：", tmpUser.Id)
 
+						tmpSecond := 59
+						if 1 <= tmpUser.First {
+							tmpSecond = 57
+						}
+
 						endOfMinute := time.Date(
 							current.Year(),
 							current.Month(),
 							current.Day(),
 							current.Hour(),
 							current.Minute(),
-							59, // 秒设置为59
-							0,  // 纳秒设为0
+							tmpSecond, // 秒设置为59
+							0,         // 纳秒设为0
 							current.Location(),
 						)
 						diffMillis := endOfMinute.Sub(current).Milliseconds()
@@ -4070,9 +4083,11 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						//}
 
 						// 过了时间立马平掉
-						if time.Now().After(endOfMinute) {
-						} else {
-							time.Sleep(time.Duration(diffMillis) * time.Millisecond)
+						if 0 < diffMillis {
+							if time.Now().After(endOfMinute) {
+							} else {
+								time.Sleep(time.Duration(diffMillis) * time.Millisecond)
+							}
 						}
 
 						var (
