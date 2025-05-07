@@ -27,7 +27,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -709,7 +708,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 		log.Printf("龟兔，程序拉取部分，开始 %v, 拉取时长: %v, 统计更新时长: %v\n", start, timePull, time.Since(start))
 
-		wg := sync.WaitGroup{}
+		//wg := sync.WaitGroup{}
 		// 遍历跟单者
 		tmpTraderBaseMoney := baseMoneyGuiTu.Val()
 		globalUsers.Iterator(func(k interface{}, v interface{}) bool {
@@ -826,9 +825,9 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						continue
 					}
 
-					wg.Add(1)
+					//wg.Add(1)
 					err = s.pool.Add(ctx, func(ctx context.Context) {
-						defer wg.Done()
+						//defer wg.Done()
 
 						var (
 							binanceOrderRes *binanceOrder
@@ -855,9 +854,9 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 							time.Sleep(10 * time.Millisecond)
 
-							wg.Add(1)
+							//wg.Add(1)
 							err = s.pool.Add(ctx, func(ctx context.Context) {
-								defer wg.Done()
+								//defer wg.Done()
 								var (
 									binanceOrderRes3 *binanceOrder
 									orderInfoRes3    *orderInfo
@@ -921,9 +920,9 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						continue
 					}
 
-					wg.Add(1)
+					//wg.Add(1)
 					err = s.pool.Add(ctx, func(ctx context.Context) {
-						defer wg.Done()
+						//defer wg.Done()
 
 						current := time.Now()
 						log.Println("当前时间：", current, "用户：", tmpUser.Id)
@@ -976,9 +975,9 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 							time.Sleep(10 * time.Millisecond)
 
-							wg.Add(1)
+							//wg.Add(1)
 							err = s.pool.Add(ctx, func(ctx context.Context) {
-								defer wg.Done()
+								//defer wg.Done()
 								var (
 									binanceOrderRes3 *binanceOrder
 									orderInfoRes3    *orderInfo
@@ -1290,9 +1289,9 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						continue
 					}
 
-					wg.Add(1)
+					//wg.Add(1)
 					err = s.pool.Add(ctx, func(ctx context.Context) {
-						defer wg.Done()
+						//defer wg.Done()
 
 						var (
 							binanceOrderRes *binanceOrder
@@ -1319,9 +1318,9 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 							time.Sleep(10 * time.Millisecond)
 
-							wg.Add(1)
+							//wg.Add(1)
 							err = s.pool.Add(ctx, func(ctx context.Context) {
-								defer wg.Done()
+								//defer wg.Done()
 								var (
 									binanceOrderRes3 *binanceOrder
 									orderInfoRes3    *orderInfo
@@ -1373,9 +1372,9 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						continue
 					}
 
-					wg.Add(1)
+					//wg.Add(1)
 					err = s.pool.Add(ctx, func(ctx context.Context) {
-						defer wg.Done()
+						//defer wg.Done()
 						current := time.Now()
 						log.Println("当前时间：", current, "用户：", tmpUser.Id)
 
@@ -1426,9 +1425,9 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 							time.Sleep(10 * time.Millisecond)
 
-							wg.Add(1)
+							//wg.Add(1)
 							err = s.pool.Add(ctx, func(ctx context.Context) {
-								defer wg.Done()
+								//defer wg.Done()
 								var (
 									binanceOrderRes3 *binanceOrder
 									orderInfoRes3    *orderInfo
@@ -1600,7 +1599,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 		})
 
 		// 回收协程
-		wg.Wait()
+		//wg.Wait()
 
 		log.Printf("龟兔，程序执行完毕，开始 %v, 拉取时长: %v, 总计时长: %v\n", start, timePull, time.Since(start))
 	}
