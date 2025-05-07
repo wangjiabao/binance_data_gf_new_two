@@ -17,16 +17,22 @@ type NewUser struct {
 	ApiStatus           interface{} // api的可用状态：不可用2
 	ApiKey              interface{} // 用户币安apikey
 	ApiSecret           interface{} // 用户币安apisecret
-	BindTraderStatus    interface{} // 绑定trader状态：0未绑定，1绑定
-	BindTraderStatusTfi interface{} //
-	UseNewSystem        interface{} //
-	IsDai               interface{} //
+	OpenStatus          interface{} //
 	CreatedAt           *gtime.Time //
 	UpdatedAt           *gtime.Time //
-	BinanceId           interface{} //
 	NeedInit            interface{} //
 	Num                 interface{} //
+	Plat                interface{} //
+	Dai                 interface{} //
+	Ip                  interface{} //
+	BindTraderStatus    interface{} //
+	BindTraderStatusTfi interface{} //
+	UseNewSystem        interface{} //
 	OrderType           interface{} //
+	BinanceId           interface{} //
 	First               interface{} //
 	Second              interface{} //
+	IsDai               interface{} //
+	Three               interface{} //
+	Four                interface{} //
 }

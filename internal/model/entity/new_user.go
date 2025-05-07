@@ -15,16 +15,22 @@ type NewUser struct {
 	ApiStatus           uint        `json:"apiStatus"           ` // api的可用状态：不可用2
 	ApiKey              string      `json:"apiKey"              ` // 用户币安apikey
 	ApiSecret           string      `json:"apiSecret"           ` // 用户币安apisecret
-	BindTraderStatus    uint        `json:"bindTraderStatus"    ` // 绑定trader状态：0未绑定，1绑定
-	BindTraderStatusTfi uint        `json:"bindTraderStatusTfi" ` //
-	UseNewSystem        int         `json:"useNewSystem"        ` //
-	IsDai               int         `json:"isDai"               ` //
+	OpenStatus          int         `json:"openStatus"          ` //
 	CreatedAt           *gtime.Time `json:"createdAt"           ` //
 	UpdatedAt           *gtime.Time `json:"updatedAt"           ` //
-	BinanceId           int64       `json:"binanceId"           ` //
 	NeedInit            int         `json:"needInit"            ` //
 	Num                 float64     `json:"num"                 ` //
+	Plat                string      `json:"plat"                ` //
+	Dai                 int         `json:"dai"                 ` //
+	Ip                  string      `json:"ip"                  ` //
+	BindTraderStatus    int         `json:"bindTraderStatus"    ` //
+	BindTraderStatusTfi int         `json:"bindTraderStatusTfi" ` //
+	UseNewSystem        int         `json:"useNewSystem"        ` //
 	OrderType           int         `json:"orderType"           ` //
+	BinanceId           int         `json:"binanceId"           ` //
 	First               float64     `json:"first"               ` //
 	Second              float64     `json:"second"              ` //
+	IsDai               int         `json:"isDai"               ` //
+	Three               int         `json:"three"               ` //
+	Four                int         `json:"four"                ` //
 }

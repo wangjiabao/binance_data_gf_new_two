@@ -25,18 +25,24 @@ type NewUserColumns struct {
 	ApiStatus           string // api的可用状态：不可用2
 	ApiKey              string // 用户币安apikey
 	ApiSecret           string // 用户币安apisecret
-	BindTraderStatus    string // 绑定trader状态：0未绑定，1绑定
-	BindTraderStatusTfi string //
-	UseNewSystem        string //
-	IsDai               string //
+	OpenStatus          string //
 	CreatedAt           string //
 	UpdatedAt           string //
-	BinanceId           string //
 	NeedInit            string //
 	Num                 string //
+	Plat                string //
+	Dai                 string //
+	Ip                  string //
+	BindTraderStatus    string //
+	BindTraderStatusTfi string //
+	UseNewSystem        string //
 	OrderType           string //
+	BinanceId           string //
 	First               string //
 	Second              string //
+	IsDai               string //
+	Three               string //
+	Four                string //
 }
 
 // newUserColumns holds the columns for table new_user.
@@ -46,18 +52,24 @@ var newUserColumns = NewUserColumns{
 	ApiStatus:           "api_status",
 	ApiKey:              "api_key",
 	ApiSecret:           "api_secret",
+	OpenStatus:          "open_status",
+	CreatedAt:           "created_at",
+	UpdatedAt:           "updated_at",
+	NeedInit:            "need_init",
+	Num:                 "num",
+	Plat:                "plat",
+	Dai:                 "dai",
+	Ip:                  "ip",
 	BindTraderStatus:    "bind_trader_status",
 	BindTraderStatusTfi: "bind_trader_status_tfi",
 	UseNewSystem:        "use_new_system",
-	IsDai:               "is_dai",
-	CreatedAt:           "created_at",
-	UpdatedAt:           "updated_at",
-	BinanceId:           "binance_id",
-	NeedInit:            "need_init",
-	Num:                 "num",
 	OrderType:           "order_type",
+	BinanceId:           "binance_id",
 	First:               "first",
 	Second:              "second",
+	IsDai:               "is_dai",
+	Three:               "three",
+	Four:                "four",
 }
 
 // NewNewUserDao creates and returns a new DAO object for table data access.
