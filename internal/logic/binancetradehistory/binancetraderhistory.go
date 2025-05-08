@@ -759,15 +759,13 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				}
 
 				var (
-					tmpQty                float64
-					quantity              string
-					quantityFloat         float64
-					quantityPreClose      string
-					quantityFloatPreClose float64
-					side                  string
-					stopSide              string
-					positionSide          string
-					orderType             = "MARKET"
+					tmpQty        float64
+					quantity      string
+					quantityFloat float64
+					side          string
+					stopSide      string
+					positionSide  string
+					orderType     = "MARKET"
 				)
 				if "LONG" == tmpInsertData.PositionSide {
 					positionSide = "LONG"
@@ -806,28 +804,32 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						continue
 					}
 
-					// 精度调整
-					if 0 >= symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
-						quantityPreClose = fmt.Sprintf("%d", int64(math.Ceil(quantityFloat/10)))
-					} else {
-						tmp := ceilToNDecimal(quantityFloat/10, symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision)
-						quantityPreClose = strconv.FormatFloat(tmp, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, 64)
-					}
-
-					quantityFloatPreClose, err = strconv.ParseFloat(quantityPreClose, 64)
-					if nil != err {
-						log.Println(err)
-						continue
-					}
-
-					if lessThanOrEqualZero(quantityFloatPreClose, 0, 1e-7) {
-						log.Println("10分之一，开仓数量太小:", quantityFloatPreClose, symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, quantityFloat)
-						continue
-					}
-
 					//wg.Add(1)
 					err = s.pool.Add(ctx, func(ctx context.Context) {
 						//defer wg.Done()
+
+						var (
+							quantityPreClose      string
+							quantityFloatPreClose float64
+						)
+						// 精度调整
+						if 0 >= symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
+							quantityPreClose = fmt.Sprintf("%d", int64(math.Ceil(quantityFloat/10)))
+						} else {
+							tmp := ceilToNDecimal(quantityFloat/10, symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision)
+							quantityPreClose = strconv.FormatFloat(tmp, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, 64)
+						}
+
+						quantityFloatPreClose, err = strconv.ParseFloat(quantityPreClose, 64)
+						if nil != err {
+							log.Println(err)
+							return
+						}
+
+						if lessThanOrEqualZero(quantityFloatPreClose, 0, 1e-7) {
+							log.Println("10分之一，开仓数量太小:", quantityFloatPreClose, symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, quantityFloat)
+							return
+						}
 
 						var (
 							binanceOrderRes *binanceOrder
@@ -901,25 +903,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						continue
 					}
 
-					// 精度调整
-					if 0 >= symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
-						quantityPreClose = fmt.Sprintf("%d", int64(math.Ceil(quantityFloat/10)))
-					} else {
-						tmp := ceilToNDecimal(quantityFloat/10, symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision)
-						quantityPreClose = strconv.FormatFloat(tmp, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, 64)
-					}
-
-					quantityFloatPreClose, err = strconv.ParseFloat(quantityPreClose, 64)
-					if nil != err {
-						log.Println(err)
-						continue
-					}
-
-					if lessThanOrEqualZero(quantityFloatPreClose, 0, 1e-7) {
-						log.Println("10分之一，开仓数量太小:", quantityFloatPreClose, symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, quantityFloat)
-						continue
-					}
-
 					//wg.Add(1)
 					err = s.pool.Add(ctx, func(ctx context.Context) {
 						//defer wg.Done()
@@ -943,7 +926,35 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							current.Location(),
 						)
 
-						diffMillis := endOfMinute.Sub(current).Milliseconds()
+						diffSecond := uint64(endOfMinute.Sub(current).Seconds())
+
+						var (
+							quantityPreClose      string
+							quantityFloatPreClose float64
+						)
+						if 0 >= diffSecond {
+							quantityPreClose = quantity
+							quantityFloatPreClose = quantityFloat
+						} else {
+							// 精度调整
+							if 0 >= symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
+								quantityPreClose = fmt.Sprintf("%d", int64(math.Ceil(quantityFloat/float64(diffSecond))))
+							} else {
+								tmp := ceilToNDecimal(quantityFloat/float64(diffSecond), symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision)
+								quantityPreClose = strconv.FormatFloat(tmp, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, 64)
+							}
+
+							quantityFloatPreClose, err = strconv.ParseFloat(quantityPreClose, 64)
+							if nil != err {
+								log.Println(err)
+								return
+							}
+
+							if lessThanOrEqualZero(quantityFloatPreClose, 0, 1e-7) {
+								log.Println("秒分之一，开仓数量太小:", quantityFloatPreClose, symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, quantityFloat)
+								return
+							}
+						}
 
 						var (
 							binanceOrderRes *binanceOrder
@@ -960,20 +971,30 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						log.Println("新，新增仓位，完成：", err, quantity, tmpUser.Id)
 
 						// 过了时间立马平掉
-						if 0 < diffMillis {
-							if time.Now().After(endOfMinute) {
-							} else {
-								time.Sleep(time.Duration(diffMillis) * time.Millisecond)
+						if 0 >= diffSecond || time.Now().After(endOfMinute) {
+							var (
+								binanceOrderRes3 *binanceOrder
+								orderInfoRes3    *orderInfo
+								errC             error
+							)
+							// 请求下单
+							binanceOrderRes3, orderInfoRes3, errC = requestBinanceOrder(tmpInsertData.Symbol.(string), stopSide, orderType, positionSide, quantity, tmpUser.ApiKey, tmpUser.ApiSecret)
+							if nil != errC || binanceOrderRes3.OrderId <= 0 {
+								log.Println("龟兔，关仓，信息：", errC, binanceOrderRes3, orderInfoRes3, tmpInsertData, stopSide, orderType, positionSide, quantity, tmpUser.Id)
+								return
 							}
+
+							log.Println("新，新增仓位，平仓：", err, quantity, tmpUser.Id, binanceOrderRes3)
+							return
 						}
 
-						for tmpI := 0; tmpI < 10; tmpI++ {
+						for tmpI := uint64(0); tmpI < diffSecond; tmpI++ {
 							tmpCloseQty := quantityPreClose
-							if tmpI == 9 {
+							if tmpI == diffSecond-1 {
 								tmpCloseQty = quantity
 							}
 
-							time.Sleep(10 * time.Millisecond)
+							time.Sleep(800 * time.Millisecond)
 
 							//wg.Add(1)
 							err = s.pool.Add(ctx, func(ctx context.Context) {
@@ -1172,15 +1193,13 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				}
 
 				var (
-					tmpQty                float64
-					quantity              string
-					quantityFloat         float64
-					quantityPreClose      string
-					quantityFloatPreClose float64
-					side                  string
-					stopSide              string
-					positionSide          string
-					orderType             = "MARKET"
+					tmpQty        float64
+					quantity      string
+					quantityFloat float64
+					side          string
+					stopSide      string
+					positionSide  string
+					orderType     = "MARKET"
 				)
 
 				if lessThanOrEqualZero(tmpUpdateData.PositionAmount.(float64), 0, 1e-7) {
@@ -1270,28 +1289,32 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						continue
 					}
 
-					// 精度调整
-					if 0 >= symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
-						quantityPreClose = fmt.Sprintf("%d", int64(math.Ceil(quantityFloat/10)))
-					} else {
-						tmp := ceilToNDecimal(quantityFloat/10, symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision)
-						quantityPreClose = strconv.FormatFloat(tmp, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, 64)
-					}
-
-					quantityFloatPreClose, err = strconv.ParseFloat(quantityPreClose, 64)
-					if nil != err {
-						log.Println(err)
-						continue
-					}
-
-					if lessThanOrEqualZero(quantityFloatPreClose, 0, 1e-7) {
-						log.Println("10分之一，开仓数量太小:", quantityFloatPreClose, symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, quantityFloat)
-						continue
-					}
-
 					//wg.Add(1)
 					err = s.pool.Add(ctx, func(ctx context.Context) {
 						//defer wg.Done()
+
+						var (
+							quantityPreClose      string
+							quantityFloatPreClose float64
+						)
+						// 精度调整
+						if 0 >= symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
+							quantityPreClose = fmt.Sprintf("%d", int64(math.Ceil(quantityFloat/10)))
+						} else {
+							tmp := ceilToNDecimal(quantityFloat/10, symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision)
+							quantityPreClose = strconv.FormatFloat(tmp, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, 64)
+						}
+
+						quantityFloatPreClose, err = strconv.ParseFloat(quantityPreClose, 64)
+						if nil != err {
+							log.Println(err)
+							return
+						}
+
+						if lessThanOrEqualZero(quantityFloatPreClose, 0, 1e-7) {
+							log.Println("10分之一，开仓数量太小:", quantityFloatPreClose, symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, quantityFloat)
+							return
+						}
 
 						var (
 							binanceOrderRes *binanceOrder
@@ -1353,22 +1376,15 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 					} else {
 						quantity = strconv.FormatFloat(tmpQty, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, 64)
 					}
-					// 精度调整
-					if 0 >= symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
-						quantityPreClose = fmt.Sprintf("%d", int64(math.Ceil(quantityFloat/10)))
-					} else {
-						tmp := ceilToNDecimal(quantityFloat/10, symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision)
-						quantityPreClose = strconv.FormatFloat(tmp, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, 64)
-					}
 
-					quantityFloatPreClose, err = strconv.ParseFloat(quantityPreClose, 64)
+					quantityFloat, err = strconv.ParseFloat(quantity, 64)
 					if nil != err {
 						log.Println(err)
 						continue
 					}
 
-					if lessThanOrEqualZero(quantityFloatPreClose, 0, 1e-7) {
-						log.Println("10分之一，开仓数量太小:", quantityFloatPreClose, symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, quantityFloat)
+					if lessThanOrEqualZero(quantityFloat, 0, 1e-7) {
+						log.Println("开仓数量太小:", quantity, symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, tmpQty)
 						continue
 					}
 
@@ -1393,7 +1409,36 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 							0,         // 纳秒设为0
 							current.Location(),
 						)
-						diffMillis := endOfMinute.Sub(current).Milliseconds()
+
+						diffSecond := uint64(endOfMinute.Sub(current).Seconds())
+
+						var (
+							quantityPreClose      string
+							quantityFloatPreClose float64
+						)
+						if 0 >= diffSecond {
+							quantityPreClose = quantity
+							quantityFloatPreClose = quantityFloat
+						} else {
+							// 精度调整
+							if 0 >= symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
+								quantityPreClose = fmt.Sprintf("%d", int64(math.Ceil(quantityFloat/float64(diffSecond))))
+							} else {
+								tmp := ceilToNDecimal(quantityFloat/float64(diffSecond), symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision)
+								quantityPreClose = strconv.FormatFloat(tmp, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, 64)
+							}
+
+							quantityFloatPreClose, err = strconv.ParseFloat(quantityPreClose, 64)
+							if nil != err {
+								log.Println(err)
+								return
+							}
+
+							if lessThanOrEqualZero(quantityFloatPreClose, 0, 1e-7) {
+								log.Println("秒分之一，开仓数量太小:", quantityFloatPreClose, symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, quantityFloat)
+								return
+							}
+						}
 
 						var (
 							binanceOrderRes *binanceOrder
@@ -1410,20 +1455,30 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						log.Println("新，更新仓位，完成：", err, quantity, tmpUser.Id)
 
 						// 过了时间立马平掉
-						if 0 < diffMillis {
-							if time.Now().After(endOfMinute) {
-							} else {
-								time.Sleep(time.Duration(diffMillis) * time.Millisecond)
+						if 0 >= diffSecond || time.Now().After(endOfMinute) {
+							var (
+								binanceOrderRes3 *binanceOrder
+								orderInfoRes3    *orderInfo
+								errC             error
+							)
+							// 请求下单
+							binanceOrderRes3, orderInfoRes3, errC = requestBinanceOrder(tmpUpdateData.Symbol.(string), stopSide, orderType, positionSide, quantity, tmpUser.ApiKey, tmpUser.ApiSecret)
+							if nil != errC || binanceOrderRes3.OrderId <= 0 {
+								log.Println("龟兔，关仓，信息：", errC, binanceOrderRes3, orderInfoRes3, tmpUpdateData, stopSide, orderType, positionSide, quantity, tmpUser.Id)
+								return
 							}
+
+							log.Println("新，新增仓位，平仓：", err, quantity, tmpUser.Id, binanceOrderRes3)
+							return
 						}
 
-						for tmpI := 0; tmpI < 10; tmpI++ {
+						for tmpI := uint64(0); tmpI < diffSecond; tmpI++ {
 							tmpCloseQty := quantityPreClose
-							if tmpI == 9 {
+							if tmpI == diffSecond-1 {
 								tmpCloseQty = quantity
 							}
 
-							time.Sleep(10 * time.Millisecond)
+							time.Sleep(800 * time.Millisecond)
 
 							//wg.Add(1)
 							err = s.pool.Add(ctx, func(ctx context.Context) {
