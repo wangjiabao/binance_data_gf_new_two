@@ -814,9 +814,9 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						)
 						// 精度调整
 						if 0 >= symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
-							quantityPreClose = fmt.Sprintf("%d", int64(math.Ceil(quantityFloat/10)))
+							quantityPreClose = fmt.Sprintf("%d", int64(math.Ceil(quantityFloat/5)))
 						} else {
-							tmp := ceilToNDecimal(quantityFloat/10, symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision)
+							tmp := ceilToNDecimal(quantityFloat/5, symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision)
 							quantityPreClose = strconv.FormatFloat(tmp, 'f', symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, 64)
 						}
 
@@ -848,9 +848,9 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						tmpFirst := time.Duration(tmpUser.First)
 						time.Sleep(tmpFirst * time.Millisecond)
 
-						for tmpI := 0; tmpI < 10; tmpI++ {
+						for tmpI := 0; tmpI < 5; tmpI++ {
 							tmpCloseQty := quantityPreClose
-							if tmpI == 9 {
+							if tmpI == 4 {
 								tmpCloseQty = quantity
 							}
 
@@ -1299,9 +1299,9 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						)
 						// 精度调整
 						if 0 >= symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
-							quantityPreClose = fmt.Sprintf("%d", int64(math.Ceil(quantityFloat/10)))
+							quantityPreClose = fmt.Sprintf("%d", int64(math.Ceil(quantityFloat/5)))
 						} else {
-							tmp := ceilToNDecimal(quantityFloat/10, symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision)
+							tmp := ceilToNDecimal(quantityFloat/5, symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision)
 							quantityPreClose = strconv.FormatFloat(tmp, 'f', symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, 64)
 						}
 
@@ -1333,9 +1333,9 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						tmpFirst := time.Duration(tmpUser.First)
 						time.Sleep(tmpFirst * time.Millisecond)
 
-						for tmpI := 0; tmpI < 10; tmpI++ {
+						for tmpI := 0; tmpI < 5; tmpI++ {
 							tmpCloseQty := quantityPreClose
-							if tmpI == 9 {
+							if tmpI == 4 {
 								tmpCloseQty = quantity
 							}
 
