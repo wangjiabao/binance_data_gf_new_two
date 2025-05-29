@@ -73,6 +73,9 @@ var (
 
 	symbolsMap     = gmap.NewStrAnyMap(true)
 	symbolsMapGate = gmap.NewStrAnyMap(true)
+
+	locKOrder     = gmap.NewStrAnyMap(true)
+	locKOrderTime = gmap.NewStrAnyMap(true)
 )
 
 // GetGlobalInfo 获取全局测试数据
@@ -804,6 +807,23 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						continue
 					}
 
+					tmpNow := time.Now().UTC().Unix()
+					strUserId := strconv.FormatUint(uint64(tmpUser.Id), 10)
+					if locKOrder.Contains(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
+						lastOrderFloat := locKOrder.Get(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(float64)
+						if IsEqual(lastOrderFloat, quantityFloat) {
+							if locKOrderTime.Contains(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
+								lastOrderT := locKOrderTime.Get(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(int64)
+								if (tmpNow - 3600*24) < lastOrderT {
+									fmt.Println("可能抖动", tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, lastOrderFloat, quantityFloat, side)
+									continue
+								}
+							}
+						}
+					}
+					locKOrder.Set(tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat)
+					locKOrderTime.Set(tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpNow)
+
 					//wg.Add(1)
 					err = s.pool.Add(ctx, func(ctx context.Context) {
 						//defer wg.Done()
@@ -902,6 +922,23 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						log.Println("开仓数量太小:", quantity, symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, tmpQty)
 						continue
 					}
+
+					tmpNow := time.Now().UTC().Unix()
+					strUserId := strconv.FormatUint(uint64(tmpUser.Id), 10)
+					if locKOrder.Contains(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
+						lastOrderFloat := locKOrder.Get(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(float64)
+						if IsEqual(lastOrderFloat, quantityFloat) {
+							if locKOrderTime.Contains(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
+								lastOrderT := locKOrderTime.Get(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(int64)
+								if (tmpNow - 3600*24) < lastOrderT {
+									fmt.Println("可能抖动", tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, lastOrderFloat, quantityFloat, side)
+									continue
+								}
+							}
+						}
+					}
+					locKOrder.Set(tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat)
+					locKOrderTime.Set(tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpNow)
 
 					//wg.Add(1)
 					err = s.pool.Add(ctx, func(ctx context.Context) {
@@ -1289,6 +1326,23 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						continue
 					}
 
+					tmpNow := time.Now().UTC().Unix()
+					strUserId := strconv.FormatUint(uint64(tmpUser.Id), 10)
+					if locKOrder.Contains(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
+						lastOrderFloat := locKOrder.Get(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(float64)
+						if IsEqual(lastOrderFloat, quantityFloat) {
+							if locKOrderTime.Contains(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
+								lastOrderT := locKOrderTime.Get(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(int64)
+								if (tmpNow - 3600*24) < lastOrderT {
+									fmt.Println("可能抖动", tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, lastOrderFloat, quantityFloat, side)
+									continue
+								}
+							}
+						}
+					}
+					locKOrder.Set(tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat)
+					locKOrderTime.Set(tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpNow)
+
 					//wg.Add(1)
 					err = s.pool.Add(ctx, func(ctx context.Context) {
 						//defer wg.Done()
@@ -1387,6 +1441,23 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 						log.Println("开仓数量太小:", quantity, symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision, tmpQty)
 						continue
 					}
+
+					tmpNow := time.Now().UTC().Unix()
+					strUserId := strconv.FormatUint(uint64(tmpUser.Id), 10)
+					if locKOrder.Contains(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
+						lastOrderFloat := locKOrder.Get(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(float64)
+						if IsEqual(lastOrderFloat, quantityFloat) {
+							if locKOrderTime.Contains(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
+								lastOrderT := locKOrderTime.Get(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(int64)
+								if (tmpNow - 3600*24) < lastOrderT {
+									fmt.Println("可能抖动", tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, lastOrderFloat, quantityFloat, side)
+									continue
+								}
+							}
+						}
+					}
+					locKOrder.Set(tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat)
+					locKOrderTime.Set(tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpNow)
 
 					//wg.Add(1)
 					err = s.pool.Add(ctx, func(ctx context.Context) {
