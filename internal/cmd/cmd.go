@@ -4,8 +4,11 @@ import (
 	"binance_data_gf/internal/service"
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gtimer"
+	"strconv"
 	"time"
 )
 
@@ -50,9 +53,203 @@ var (
 			gtimer.AddSingleton(ctx, time.Second*300, handle3)
 
 			// 任务1 同步订单
-			go func() {
-				serviceBinanceTrader.PullAndOrderNewGuiTuPlay(ctx)
-			}()
+			go serviceBinanceTrader.PullAndOrderNewGuiTuPlay(ctx)
+
+			s := g.Server()
+			s.Group("/api", func(group *ghttp.RouterGroup) {
+				// 加人
+				group.POST("/create/user", func(r *ghttp.Request) {
+					var (
+						parseErr error
+						setErr   error
+						num      float64
+						first    uint64
+						second   float64
+						dai      uint64
+					)
+					dai, parseErr = strconv.ParseUint(r.PostFormValue("dai"), 10, 64)
+					if nil != parseErr {
+						r.Response.WriteJson(g.Map{
+							"code": -1,
+						})
+
+						return
+					}
+
+					num, parseErr = strconv.ParseFloat(r.PostFormValue("num"), 64)
+					if nil != parseErr || 0 >= num {
+						r.Response.WriteJson(g.Map{
+							"code": -1,
+						})
+
+						return
+					}
+
+					first, parseErr = strconv.ParseUint(r.PostFormValue("first"), 10, 64)
+					if nil != parseErr {
+						r.Response.WriteJson(g.Map{
+							"code": -1,
+						})
+
+						return
+					}
+
+					second, parseErr = strconv.ParseFloat(r.PostFormValue("second"), 64)
+					if nil != parseErr {
+						r.Response.WriteJson(g.Map{
+							"code": -1,
+						})
+
+						return
+					}
+
+					setErr = serviceBinanceTrader.CreateUser(
+						ctx,
+						r.PostFormValue("address"),
+						r.PostFormValue("api_key"),
+						r.PostFormValue("api_secret"),
+						dai,
+						num,
+						float64(first),
+						second,
+					)
+					if nil != setErr {
+						r.Response.WriteJson(g.Map{
+							"code": -2,
+						})
+
+						return
+					}
+
+					r.Response.WriteJson(g.Map{
+						"code": 1,
+					})
+
+					return
+				})
+
+				group.POST("/set/user", func(r *ghttp.Request) {
+					var (
+						parseErr  error
+						setErr    error
+						num       float64
+						first     uint64
+						second    float64
+						dai       uint64
+						apiStatus uint64
+					)
+					dai, parseErr = strconv.ParseUint(r.PostFormValue("dai"), 10, 64)
+					if nil != parseErr {
+						r.Response.WriteJson(g.Map{
+							"code": -1,
+						})
+
+						return
+					}
+
+					apiStatus, parseErr = strconv.ParseUint(r.PostFormValue("dai"), 10, 64)
+					if nil != parseErr {
+						r.Response.WriteJson(g.Map{
+							"code": -1,
+						})
+
+						return
+					}
+
+					num, parseErr = strconv.ParseFloat(r.PostFormValue("num"), 64)
+					if nil != parseErr || 0 >= num {
+						r.Response.WriteJson(g.Map{
+							"code": -1,
+						})
+
+						return
+					}
+
+					first, parseErr = strconv.ParseUint(r.PostFormValue("first"), 10, 64)
+					if nil != parseErr {
+						r.Response.WriteJson(g.Map{
+							"code": -1,
+						})
+
+						return
+					}
+
+					second, parseErr = strconv.ParseFloat(r.PostFormValue("second"), 64)
+					if nil != parseErr {
+						r.Response.WriteJson(g.Map{
+							"code": -1,
+						})
+
+						return
+					}
+
+					setErr = serviceBinanceTrader.SetUser(
+						ctx,
+						r.PostFormValue("address"),
+						r.PostFormValue("api_key"),
+						r.PostFormValue("api_secret"),
+						apiStatus,
+						dai,
+						num,
+						float64(first),
+						second,
+					)
+					if nil != setErr {
+						r.Response.WriteJson(g.Map{
+							"code": -2,
+						})
+
+						return
+					}
+
+					r.Response.WriteJson(g.Map{
+						"code": 1,
+					})
+
+					return
+				})
+
+				// 查询api status
+				group.GET("/users", func(r *ghttp.Request) {
+
+					res := serviceBinanceTrader.GetUsers()
+					responseData := make([]*g.MapStrAny, 0)
+					for _, v := range res {
+						responseData = append(responseData, &g.MapStrAny{
+							"address":    v.Address,
+							"api_key":    v.ApiKey,
+							"api_secret": v.ApiSecret,
+							"dai":        v.Dai,
+							"num":        v.Num,
+							"first":      v.First,
+							"second":     v.Second,
+							"api_status": v.ApiStatus,
+						})
+					}
+
+					r.Response.WriteJson(responseData)
+				})
+
+				// cookie设置
+				group.POST("/cookie", func(r *ghttp.Request) {
+					r.Response.WriteJson(g.Map{
+						"code": serviceBinanceTrader.SetCookie(ctx, r.PostFormValue("cookie"), r.PostFormValue("token")),
+					})
+
+					return
+				})
+
+				group.POST("/set/ex_map", func(r *ghttp.Request) {
+					r.Response.WriteJson(g.Map{
+						"code": serviceBinanceTrader.SetExMap(r.PostFormValue("name"), r.PostFormValue("res")),
+					})
+
+					return
+				})
+			})
+
+			s.SetPort(80)
+			s.Run()
 
 			// 阻塞
 			select {}

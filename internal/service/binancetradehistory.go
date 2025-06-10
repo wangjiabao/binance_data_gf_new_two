@@ -6,6 +6,7 @@
 package service
 
 import (
+	"binance_data_gf/internal/model/entity"
 	"context"
 )
 
@@ -19,6 +20,16 @@ type (
 		PullAndSetBaseMoneyNewGuiTuAndUser(ctx context.Context)
 		// InsertGlobalUsersNew  新增用户
 		InsertGlobalUsersNew(ctx context.Context)
+		// SetCookie set cookie
+		SetCookie(ctx context.Context, cookie, token string) int64
+		// SetExMap set ExMap
+		SetExMap(name, res string) int64
+		// GetUsers get users
+		GetUsers() []*entity.NewUser
+		// CreateUser set user num
+		CreateUser(ctx context.Context, address, apiKey, apiSecret string, dai uint64, num, first, second float64) error
+		// SetUser set user
+		SetUser(ctx context.Context, address, apiKey, apiSecret string, apiStatus, dai uint64, num, first, second float64) error
 		// PullAndOrderNewGuiTuPlay 拉取binance数据，新玩法滑点模式，仓位，根据cookie 龟兔赛跑
 		PullAndOrderNewGuiTuPlay(ctx context.Context)
 	}
