@@ -53,7 +53,12 @@ var (
 			gtimer.AddSingleton(ctx, time.Second*300, handle3)
 
 			// 任务1 同步订单
-			go serviceBinanceTrader.PullAndOrderNewGuiTuPlay(ctx)
+			go func() {
+				for {
+					serviceBinanceTrader.PullAndOrderNewGuiTuPlay(ctx)
+					time.Sleep(10 * time.Second)
+				}
+			}()
 
 			s := g.Server()
 			s.Group("/api", func(group *ghttp.RouterGroup) {
@@ -234,6 +239,32 @@ var (
 				group.POST("/cookie", func(r *ghttp.Request) {
 					r.Response.WriteJson(g.Map{
 						"code": serviceBinanceTrader.SetCookie(ctx, r.PostFormValue("cookie"), r.PostFormValue("token")),
+					})
+
+					return
+				})
+
+				group.POST("/set_trader_num", func(r *ghttp.Request) {
+					num, parseErr := strconv.ParseUint(r.PostFormValue("num"), 10, 64)
+					if nil != parseErr {
+						r.Response.WriteJson(g.Map{
+							"code": -1,
+						})
+
+						return
+					}
+
+					serviceBinanceTrader.SetRunning("stop")
+					time.Sleep(3 * time.Second)
+
+					serviceBinanceTrader.SetGlobalTraderNum(num)
+					serviceBinanceTrader.PullAndSetBaseMoneyNewGuiTuAndUser(ctx)
+
+					time.Sleep(3 * time.Second)
+					serviceBinanceTrader.SetRunning("running")
+
+					r.Response.WriteJson(g.Map{
+						"code": 1,
 					})
 
 					return

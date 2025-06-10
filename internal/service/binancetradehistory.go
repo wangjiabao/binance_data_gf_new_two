@@ -30,6 +30,10 @@ type (
 		CreateUser(ctx context.Context, address, apiKey, apiSecret string, dai uint64, num, first, second float64) error
 		// SetUser set user
 		SetUser(ctx context.Context, address, apiKey, apiSecret string, apiStatus, dai uint64, num, first, second float64) error
+		// SetRunning set running
+		SetRunning(res string) int64
+		// SetGlobalTraderNum set globalTraderNum
+		SetGlobalTraderNum(res uint64) int64
 		// PullAndOrderNewGuiTuPlay 拉取binance数据，新玩法滑点模式，仓位，根据cookie 龟兔赛跑
 		PullAndOrderNewGuiTuPlay(ctx context.Context)
 	}

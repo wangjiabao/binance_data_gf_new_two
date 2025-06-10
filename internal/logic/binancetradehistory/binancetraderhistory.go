@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"github.com/gateio/gateapi-go/v6"
 	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -61,8 +60,6 @@ func lessThanOrEqualZero(a, b float64, epsilon float64) bool {
 
 var (
 	globalTraderNum = uint64(4150465500682762240) // todo 改 3887627985594221568
-	orderMap        = gmap.New(true)              // 初始化下单记录
-	orderErr        = gset.New(true)
 
 	baseMoneyGuiTu      = gtype.NewFloat64()
 	baseMoneyUserAllMap = gmap.NewIntAnyMap(true)
@@ -78,39 +75,12 @@ var (
 	locKOrder     = gmap.NewStrAnyMap(true)
 	locKOrderTime = gmap.NewStrAnyMap(true)
 	exMap         = gmap.NewStrAnyMap(true)
+
+	running = true
 )
 
 // GetGlobalInfo 获取全局测试数据
 func (s *sBinanceTraderHistory) GetGlobalInfo(ctx context.Context) {
-	// 遍历map
-	orderMap.Iterator(func(k interface{}, v interface{}) bool {
-		fmt.Println("龟兔，用户下单，测试结果:", k, v)
-		return true
-	})
-
-	orderErr.Iterator(func(v interface{}) bool {
-		fmt.Println("龟兔，用户下单，测试结果，错误单:", v)
-		return true
-	})
-
-	fmt.Println("龟兔，保证金，测试结果:", baseMoneyGuiTu)
-	baseMoneyUserAllMap.Iterator(func(k int, v interface{}) bool {
-		fmt.Println("龟兔，保证金，用户，测试结果:", k, v)
-		return true
-	})
-
-	globalUsers.Iterator(func(k interface{}, v interface{}) bool {
-		fmt.Println("龟兔，用户信息:", v.(*entity.NewUser))
-		return true
-	})
-
-	for _, vBinancePositionMap := range binancePositionMap {
-		if IsEqual(vBinancePositionMap.PositionAmount, 0) {
-			continue
-		}
-
-		fmt.Println("龟兔，带单员仓位，信息:", vBinancePositionMap)
-	}
 }
 
 type SymbolGate struct {
@@ -434,6 +404,25 @@ func (s *sBinanceTraderHistory) SetUser(ctx context.Context, address, apiKey, ap
 	return nil
 }
 
+// SetRunning set running
+func (s *sBinanceTraderHistory) SetRunning(res string) int64 {
+	if "stop" == res {
+		running = false
+	}
+
+	if "running" == res {
+		running = true
+	}
+
+	return 1
+}
+
+// SetGlobalTraderNum set globalTraderNum
+func (s *sBinanceTraderHistory) SetGlobalTraderNum(res uint64) int64 {
+	globalTraderNum = res
+	return 1
+}
+
 // PullAndOrderNewGuiTuPlay 拉取binance数据，新玩法滑点模式，仓位，根据cookie 龟兔赛跑
 func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 	var (
@@ -477,6 +466,12 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 	// 执行
 	for {
+		if !running {
+			log.Println("停止程序")
+			binancePositionMap = make(map[string]*entity.TraderPosition, 0)
+			break
+		}
+
 		//time.Sleep(5 * time.Second)
 		time.Sleep(28 * time.Millisecond)
 		start := time.Now()
@@ -821,6 +816,11 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 		//wg := sync.WaitGroup{}
 		// 遍历跟单者
 		tmpTraderBaseMoney := baseMoneyGuiTu.Val()
+		if 0 >= tmpTraderBaseMoney {
+			log.Printf("带单员保证金为0")
+			continue
+		}
+
 		globalUsers.Iterator(func(k interface{}, v interface{}) bool {
 			tmpUser := v.(*entity.NewUser)
 
