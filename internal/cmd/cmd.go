@@ -13,16 +13,6 @@ import (
 	"time"
 )
 
-func CORS(r *ghttp.Request) {
-	r.Response.Header().Set("Access-Control-Allow-Origin", "*")
-	r.Response.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-	r.Response.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
-
-	if r.Method == "OPTIONS" {
-		r.Exit()
-	}
-}
-
 var (
 	Main = &gcmd.Command{
 		Name: "main",
@@ -73,9 +63,20 @@ var (
 
 			s := g.Server()
 			// 使用 CORS 中间件（全局）
-			//s.Use(CORS)
 
 			s.Group("/api", func(group *ghttp.RouterGroup) {
+				group.Middleware(func(r *ghttp.Request) {
+					r.Response.Header().Set("Access-Control-Allow-Origin", "*")
+					r.Response.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+					r.Response.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+					// OPTIONS 请求直接返回
+					if r.Method == "OPTIONS" {
+						r.Exit()
+					}
+					r.Middleware.Next()
+				})
+
 				// 用户设置
 				group.POST("/create/user", func(r *ghttp.Request) {
 					var (
