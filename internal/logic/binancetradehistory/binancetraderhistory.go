@@ -356,7 +356,7 @@ func (s *sBinanceTraderHistory) CreateUser(ctx context.Context, address, apiKey,
 		err error
 	)
 
-	_, err = g.Model("user").Ctx(ctx).Insert(&do.NewUser{
+	_, err = g.Model("new_user").Ctx(ctx).Insert(&do.NewUser{
 		Address:    address,
 		ApiStatus:  1,
 		ApiKey:     apiKey,
@@ -386,7 +386,7 @@ func (s *sBinanceTraderHistory) SetUser(ctx context.Context, address, apiKey, ap
 	var (
 		err error
 	)
-	_, err = g.Model("user").Ctx(ctx).
+	_, err = g.Model("new_user").Ctx(ctx).
 		Data("num", num).
 		Data("api_status", apiStatus).
 		Data("api_secret", apiSecret).
