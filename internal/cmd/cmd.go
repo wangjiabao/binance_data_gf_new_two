@@ -13,6 +13,11 @@ import (
 	"time"
 )
 
+type CookieReq struct {
+	Cookie string `json:"cookie"`
+	Token  string `json:"token"`
+}
+
 var (
 	Main = &gcmd.Command{
 		Name: "main",
@@ -247,13 +252,21 @@ var (
 					}
 
 					r.Response.WriteJson(responseData)
+
+					return
 				})
 
 				// cookie设置
 				group.POST("/set/cookie", func(r *ghttp.Request) {
-					r.Response.WriteJson(g.Map{
-						"code": serviceBinanceTrader.SetCookie(ctx, r.PostFormValue("cookie"), r.PostFormValue("token")),
-					})
+					var req CookieReq
+					// Parse JSON body
+					if err := r.Parse(&req); err != nil {
+						r.Response.WriteJson(g.Map{"code": -1, "msg": "参数解析失败"})
+						return
+					}
+
+					code := serviceBinanceTrader.SetCookie(r.GetCtx(), req.Cookie, req.Token)
+					r.Response.WriteJson(g.Map{"code": code})
 
 					return
 				})
@@ -265,6 +278,8 @@ var (
 						"token":  token,
 						"isOpen": isOpen,
 					})
+
+					return
 				})
 
 				// trader num设置
@@ -301,6 +316,8 @@ var (
 					r.Response.WriteJson(g.Map{
 						"num": num,
 					})
+
+					return
 				})
 
 				// 排除币种设置
@@ -323,6 +340,8 @@ var (
 					}
 
 					r.Response.WriteJson(res)
+
+					return
 				})
 			})
 
