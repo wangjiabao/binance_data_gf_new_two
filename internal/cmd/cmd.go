@@ -14,7 +14,7 @@ import (
 )
 
 func CORS(r *ghttp.Request) {
-	r.Response.Header().Set("Access-Control-Allow-Origin", "http://3.113.171.91")
+	r.Response.Header().Set("Access-Control-Allow-Origin", "*")
 	r.Response.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	r.Response.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 
