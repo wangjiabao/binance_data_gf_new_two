@@ -34,6 +34,12 @@ type (
 		SetRunning(res string) int64
 		// SetGlobalTraderNum set globalTraderNum
 		SetGlobalTraderNum(res uint64) int64
+		// GetGlobalTraderNum get globalTraderNum
+		GetGlobalTraderNum() uint64
+		// GetCookie get cookie
+		GetCookie(ctx context.Context) (string, string, int)
+		// GetExMap get exMap
+		GetExMap() map[string]bool
 		// PullAndOrderNewGuiTuPlay 拉取binance数据，新玩法滑点模式，仓位，根据cookie 龟兔赛跑
 		PullAndOrderNewGuiTuPlay(ctx context.Context)
 	}

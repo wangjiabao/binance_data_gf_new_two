@@ -8,6 +8,7 @@ import (
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gtimer"
+	"log"
 	"strconv"
 	"time"
 )
@@ -62,7 +63,7 @@ var (
 
 			s := g.Server()
 			s.Group("/api", func(group *ghttp.RouterGroup) {
-				// 加人
+				// 用户设置
 				group.POST("/create/user", func(r *ghttp.Request) {
 					var (
 						parseErr error
@@ -214,13 +215,12 @@ var (
 					return
 				})
 
-				// 查询api status
 				group.GET("/users", func(r *ghttp.Request) {
 
 					res := serviceBinanceTrader.GetUsers()
-					responseData := make([]*g.MapStrAny, 0)
+					responseData := make([]*g.Map, 0)
 					for _, v := range res {
-						responseData = append(responseData, &g.MapStrAny{
+						responseData = append(responseData, &g.Map{
 							"address":    v.Address,
 							"api_key":    v.ApiKey,
 							"api_secret": v.ApiSecret,
@@ -236,7 +236,7 @@ var (
 				})
 
 				// cookie设置
-				group.POST("/cookie", func(r *ghttp.Request) {
+				group.POST("/set/cookie", func(r *ghttp.Request) {
 					r.Response.WriteJson(g.Map{
 						"code": serviceBinanceTrader.SetCookie(ctx, r.PostFormValue("cookie"), r.PostFormValue("token")),
 					})
@@ -244,7 +244,17 @@ var (
 					return
 				})
 
-				group.POST("/set_trader_num", func(r *ghttp.Request) {
+				group.GET("/cookie", func(r *ghttp.Request) {
+					cookie, token, isOpen := serviceBinanceTrader.GetCookie(ctx)
+					r.Response.WriteJson(g.Map{
+						"cookie":  cookie,
+						"token":   token,
+						"is_open": isOpen,
+					})
+				})
+
+				// trader num设置
+				group.POST("/set/trader_num", func(r *ghttp.Request) {
 					num, parseErr := strconv.ParseUint(r.PostFormValue("num"), 10, 64)
 					if nil != parseErr {
 						r.Response.WriteJson(g.Map{
@@ -263,6 +273,8 @@ var (
 					time.Sleep(3 * time.Second)
 					serviceBinanceTrader.SetRunning("running")
 
+					log.Println("更新交易员完成")
+
 					r.Response.WriteJson(g.Map{
 						"code": 1,
 					})
@@ -270,12 +282,33 @@ var (
 					return
 				})
 
+				group.GET("/trader_num", func(r *ghttp.Request) {
+					num := serviceBinanceTrader.GetGlobalTraderNum()
+					r.Response.WriteJson(g.Map{
+						"num": num,
+					})
+				})
+
+				// 排除币种设置
 				group.POST("/set/ex_map", func(r *ghttp.Request) {
 					r.Response.WriteJson(g.Map{
 						"code": serviceBinanceTrader.SetExMap(r.PostFormValue("name"), r.PostFormValue("res")),
 					})
 
 					return
+				})
+
+				group.GET("/ex_map", func(r *ghttp.Request) {
+					exMap := serviceBinanceTrader.GetExMap()
+
+					res := make([]*g.Map, 0)
+					for k, v := range exMap {
+						res = append(res, &g.Map{
+							k: v,
+						})
+					}
+
+					r.Response.WriteJson(res)
 				})
 			})
 
