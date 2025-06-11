@@ -387,13 +387,15 @@ func (s *sBinanceTraderHistory) SetUser(ctx context.Context, address, apiKey, ap
 		err error
 	)
 	_, err = g.Model("new_user").Ctx(ctx).
-		Data("num", num).
-		Data("api_status", apiStatus).
-		Data("api_secret", apiSecret).
-		Data("address", address).
-		Data("dai", dai).
-		Data("first", first).
-		Data("second", second).
+		Data(g.Map{
+			"num":        num,
+			"api_status": apiStatus,
+			"api_secret": apiSecret,
+			"address":    address,
+			"dai":        dai,
+			"second":     second,
+			"first":      first,
+		}).
 		Where("api_key=?", apiKey).Update()
 	if nil != err {
 		log.Println("更新用户：", err)
