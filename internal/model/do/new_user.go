@@ -33,6 +33,4 @@ type NewUser struct {
 	First               interface{} //
 	Second              interface{} //
 	IsDai               interface{} //
-	Three               interface{} //
-	Four                interface{} //
 }

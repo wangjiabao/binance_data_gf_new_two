@@ -31,6 +31,4 @@ type NewUser struct {
 	First               float64     `json:"first"               ` //
 	Second              float64     `json:"second"              ` //
 	IsDai               int         `json:"isDai"               ` //
-	Three               int         `json:"three"               ` //
-	Four                int         `json:"four"                ` //
 }

@@ -41,8 +41,6 @@ type NewUserColumns struct {
 	First               string //
 	Second              string //
 	IsDai               string //
-	Three               string //
-	Four                string //
 }
 
 // newUserColumns holds the columns for table new_user.
@@ -68,8 +66,6 @@ var newUserColumns = NewUserColumns{
 	First:               "first",
 	Second:              "second",
 	IsDai:               "is_dai",
-	Three:               "three",
-	Four:                "four",
 }
 
 // NewNewUserDao creates and returns a new DAO object for table data access.
