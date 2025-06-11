@@ -112,8 +112,8 @@ var (
 					setErr = serviceBinanceTrader.CreateUser(
 						ctx,
 						r.PostFormValue("address"),
-						r.PostFormValue("api_key"),
-						r.PostFormValue("api_secret"),
+						r.PostFormValue("apiKey"),
+						r.PostFormValue("apiSecret"),
 						dai,
 						num,
 						float64(first),
@@ -153,7 +153,7 @@ var (
 						return
 					}
 
-					apiStatus, parseErr = strconv.ParseUint(r.PostFormValue("dai"), 10, 64)
+					apiStatus, parseErr = strconv.ParseUint(r.PostFormValue("apiStatus"), 10, 64)
 					if nil != parseErr {
 						r.Response.WriteJson(g.Map{
 							"code": -1,
@@ -192,8 +192,8 @@ var (
 					setErr = serviceBinanceTrader.SetUser(
 						ctx,
 						r.PostFormValue("address"),
-						r.PostFormValue("api_key"),
-						r.PostFormValue("api_secret"),
+						r.PostFormValue("apiKey"),
+						r.PostFormValue("apiSecret"),
 						apiStatus,
 						dai,
 						num,
@@ -221,14 +221,14 @@ var (
 					responseData := make([]*g.Map, 0)
 					for _, v := range res {
 						responseData = append(responseData, &g.Map{
-							"address":    v.Address,
-							"api_key":    v.ApiKey,
-							"api_secret": v.ApiSecret,
-							"dai":        v.Dai,
-							"num":        v.Num,
-							"first":      v.First,
-							"second":     v.Second,
-							"api_status": v.ApiStatus,
+							"address":   v.Address,
+							"apiKey":    v.ApiKey,
+							"apiSecret": v.ApiSecret,
+							"dai":       v.Dai,
+							"num":       v.Num,
+							"first":     v.First,
+							"second":    v.Second,
+							"apiStatus": v.ApiStatus,
 						})
 					}
 
@@ -247,9 +247,9 @@ var (
 				group.GET("/cookie", func(r *ghttp.Request) {
 					cookie, token, isOpen := serviceBinanceTrader.GetCookie(ctx)
 					r.Response.WriteJson(g.Map{
-						"cookie":  cookie,
-						"token":   token,
-						"is_open": isOpen,
+						"cookie": cookie,
+						"token":  token,
+						"isOpen": isOpen,
 					})
 				})
 
