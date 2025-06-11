@@ -73,7 +73,7 @@ var (
 
 			s := g.Server()
 			// 使用 CORS 中间件（全局）
-			s.Use(CORS)
+			//s.Use(CORS)
 
 			s.Group("/api", func(group *ghttp.RouterGroup) {
 				// 用户设置
