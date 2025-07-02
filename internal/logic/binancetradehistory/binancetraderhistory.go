@@ -209,7 +209,7 @@ func (s *sBinanceTraderHistory) PullAndSetBaseMoneyNewGuiTuAndUser(ctx context.C
 		}
 
 		if !IsEqual(tmp, baseMoneyTotalGuiTu.Val()) && !IsEqual(tmp, baseMoneyGuiTu.Val()) {
-			fmt.Println("龟兔，变更，规模，保证金")
+			//fmt.Println("龟兔，变更，规模，保证金")
 			if tmp > baseMoneyGuiTu.Val() {
 				baseMoneyTotalGuiTu.Set(tmp - baseMoneyGuiTu.Val())
 			} else if tmp == baseMoneyGuiTu.Val() {
