@@ -89,7 +89,6 @@ var (
 						setErr   error
 						num      float64
 						first    uint64
-						second   float64
 						dai      uint64
 						three    int64
 						four     int64
@@ -113,15 +112,6 @@ var (
 					}
 
 					first, parseErr = strconv.ParseUint(r.PostFormValue("first"), 10, 64)
-					if nil != parseErr {
-						r.Response.WriteJson(g.Map{
-							"code": -1,
-						})
-
-						return
-					}
-
-					second, parseErr = strconv.ParseFloat(r.PostFormValue("second"), 64)
 					if nil != parseErr {
 						r.Response.WriteJson(g.Map{
 							"code": -1,
@@ -158,7 +148,6 @@ var (
 						dai,
 						num,
 						float64(first),
-						second,
 						three,
 						four,
 					)
@@ -183,7 +172,6 @@ var (
 						setErr    error
 						num       float64
 						first     uint64
-						second    float64
 						dai       uint64
 						apiStatus uint64
 						three     int64
@@ -225,14 +213,14 @@ var (
 						return
 					}
 
-					second, parseErr = strconv.ParseFloat(r.PostFormValue("second"), 64)
-					if nil != parseErr {
-						r.Response.WriteJson(g.Map{
-							"code": -1,
-						})
-
-						return
-					}
+					//second, parseErr = strconv.ParseFloat(r.PostFormValue("second"), 64)
+					//if nil != parseErr {
+					//	r.Response.WriteJson(g.Map{
+					//		"code": -1,
+					//	})
+					//
+					//	return
+					//}
 
 					// 每多少u
 					three, parseErr = strconv.ParseInt(r.PostFormValue("three"), 10, 64)
@@ -263,7 +251,6 @@ var (
 						dai,
 						num,
 						float64(first),
-						second,
 						three,
 						four,
 					)
@@ -294,7 +281,6 @@ var (
 							"dai":       v.Dai,
 							"num":       v.Num,
 							"first":     v.First,
-							"second":    v.Second,
 							"apiStatus": v.ApiStatus,
 							"three":     v.BindTraderStatusTfi, // 每多少u
 							"four":      v.BindTraderStatus,    // 开多少u

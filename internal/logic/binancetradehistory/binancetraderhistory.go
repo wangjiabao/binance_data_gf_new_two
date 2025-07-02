@@ -283,7 +283,7 @@ func (s *sBinanceTraderHistory) InsertGlobalUsersNew(ctx context.Context) {
 			// 数据变更
 			if vTmpUserMap.First != vGlobalUsers.First || // 平仓总次数
 				vTmpUserMap.Dai != vGlobalUsers.Dai || // 平仓间隔时长毫秒
-				vTmpUserMap.Second != vGlobalUsers.Second || // 目标开仓，使用的保证金占比限制
+				//vTmpUserMap.Second != vGlobalUsers.Second || // 目标开仓，使用的保证金占比限制
 				vTmpUserMap.Address != vGlobalUsers.Address ||
 				vTmpUserMap.ApiSecret != vGlobalUsers.ApiSecret ||
 				vTmpUserMap.BindTraderStatusTfi != vGlobalUsers.BindTraderStatusTfi || // 每多少u
@@ -374,7 +374,7 @@ func (s *sBinanceTraderHistory) GetUsers() []*entity.NewUser {
 }
 
 // CreateUser set user num
-func (s *sBinanceTraderHistory) CreateUser(ctx context.Context, address, apiKey, apiSecret string, dai uint64, num, first, second float64, three, four int64) error {
+func (s *sBinanceTraderHistory) CreateUser(ctx context.Context, address, apiKey, apiSecret string, dai uint64, num, first float64, three, four int64) error {
 	var (
 		err error
 	)
@@ -392,7 +392,7 @@ func (s *sBinanceTraderHistory) CreateUser(ctx context.Context, address, apiKey,
 		Plat:                "binance",
 		Dai:                 dai,
 		First:               first,
-		Second:              second,
+		Second:              1,
 		OrderType:           1,
 		Ip:                  1,
 		BindTraderStatusTfi: three, // 每多少u
@@ -407,7 +407,7 @@ func (s *sBinanceTraderHistory) CreateUser(ctx context.Context, address, apiKey,
 }
 
 // SetUser set user
-func (s *sBinanceTraderHistory) SetUser(ctx context.Context, address, apiKey, apiSecret string, apiStatus, dai uint64, num, first, second float64, three, four int64) error {
+func (s *sBinanceTraderHistory) SetUser(ctx context.Context, address, apiKey, apiSecret string, apiStatus, dai uint64, num, first float64, three, four int64) error {
 	var (
 		err error
 	)
@@ -418,7 +418,6 @@ func (s *sBinanceTraderHistory) SetUser(ctx context.Context, address, apiKey, ap
 			"api_secret":             apiSecret,
 			"address":                address,
 			"dai":                    dai,
-			"second":                 second,
 			"first":                  first,
 			"bind_trader_status_tfi": three,
 			"bind_trader_status":     four,
@@ -917,18 +916,23 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				}
 
 				tmpRate := tmpInsertData.PositionAmount.(float64) * tmpInsertData.MarkPrice.(float64) / tmpTraderBaseMoney
-				if tmpRate < tmpUser.Second {
-					log.Println("小于操作规定比例，信息", tmpInsertData, tmpTraderBaseMoney, tmpUser.Second)
-					continue
-				}
+				//if tmpRate < tmpUser.Second {
+				//	log.Println("小于操作规定比例，信息", tmpInsertData, tmpTraderBaseMoney, tmpUser.Second)
+				//	continue
+				//}
 
 				// 所有跟单人的总开仓u
 				tmpTotalPositionAmountU := tmpRate * tmpTraderBaseMoneyTotal
-				if 0 >= tmpUser.BindTraderStatusTfi {
-					log.Println("用户设置开仓比例，小于等于0，信息", tmpUser, tmpInsertData)
+				if 1 >= tmpUser.BindTraderStatusTfi || 1 >= tmpUser.BindTraderStatus {
+					log.Println("用户设置开仓比例，小于等于1，信息", tmpUser, tmpInsertData)
 					continue
 				}
+
 				// 计算出本次开仓u数，参数1是每多少u，参数2是开多少u
+				if float64(tmpUser.BindTraderStatusTfi) > tmpTotalPositionAmountU {
+					log.Println("小于操作规定比例，信息", tmpUser.BindTraderStatusTfi, tmpTotalPositionAmountU)
+					continue
+				}
 				cU := tmpTotalPositionAmountU / float64(tmpUser.BindTraderStatusTfi) * float64(tmpUser.BindTraderStatus)
 
 				if !symbolsMap.Contains(tmpInsertData.Symbol.(string)) {
@@ -1127,18 +1131,23 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				}
 
 				tmpRate := math.Abs(lastPositionData.PositionAmount*lastPositionData.MarkPrice-tmpUpdateData.PositionAmount.(float64)*tmpUpdateData.MarkPrice.(float64)) / tmpTraderBaseMoney
-				if tmpRate < tmpUser.Second {
-					log.Println("变更，小于操作规定比例，信息", lastPositionData, tmpUpdateData, tmpTraderBaseMoney, tmpUser.Second)
-					continue
-				}
+				//if tmpRate < tmpUser.Second {
+				//	log.Println("变更，小于操作规定比例，信息", lastPositionData, tmpUpdateData, tmpTraderBaseMoney, tmpUser.Second)
+				//	continue
+				//}
 
 				// 所有跟单人的总开仓u
 				tmpTotalPositionAmountU := tmpRate * tmpTraderBaseMoneyTotal
-				if 0 >= tmpUser.BindTraderStatusTfi {
-					log.Println("用户设置开仓比例，小于等于0，信息", tmpUser, tmpUpdateData)
+				if 1 >= tmpUser.BindTraderStatusTfi || 1 >= tmpUser.BindTraderStatus {
+					log.Println("用户设置开仓比例，小于等于1，信息", tmpUser, tmpUpdateData)
 					continue
 				}
+
 				// 计算出本次开仓u数，参数1是每多少u，参数2是开多少u
+				if float64(tmpUser.BindTraderStatusTfi) > tmpTotalPositionAmountU {
+					log.Println("变更，小于操作规定比例，信息", tmpUser.BindTraderStatusTfi, tmpTotalPositionAmountU)
+					continue
+				}
 				cU := tmpTotalPositionAmountU / float64(tmpUser.BindTraderStatusTfi) * float64(tmpUser.BindTraderStatus)
 
 				if !symbolsMap.Contains(tmpUpdateData.Symbol.(string)) {
