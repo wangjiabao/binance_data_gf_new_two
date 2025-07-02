@@ -27,9 +27,9 @@ type (
 		// GetUsers get users
 		GetUsers() []*entity.NewUser
 		// CreateUser set user num
-		CreateUser(ctx context.Context, address, apiKey, apiSecret string, dai uint64, num, first, second float64) error
+		CreateUser(ctx context.Context, address, apiKey, apiSecret string, dai uint64, num, first, second float64, three, four int64) error
 		// SetUser set user
-		SetUser(ctx context.Context, address, apiKey, apiSecret string, apiStatus, dai uint64, num, first, second float64) error
+		SetUser(ctx context.Context, address, apiKey, apiSecret string, apiStatus, dai uint64, num, first, second float64, three, four int64) error
 		// SetRunning set running
 		SetRunning(res string) int64
 		// SetGlobalTraderNum set globalTraderNum

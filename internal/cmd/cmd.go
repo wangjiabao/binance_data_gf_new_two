@@ -91,6 +91,8 @@ var (
 						first    uint64
 						second   float64
 						dai      uint64
+						three    int64
+						four     int64
 					)
 					dai, parseErr = strconv.ParseUint(r.PostFormValue("dai"), 10, 64)
 					if nil != parseErr {
@@ -128,6 +130,26 @@ var (
 						return
 					}
 
+					// 每多少u
+					three, parseErr = strconv.ParseInt(r.PostFormValue("three"), 10, 64)
+					if nil != parseErr {
+						r.Response.WriteJson(g.Map{
+							"code": -1,
+						})
+
+						return
+					}
+
+					// 开多少u
+					four, parseErr = strconv.ParseInt(r.PostFormValue("four"), 10, 64)
+					if nil != parseErr {
+						r.Response.WriteJson(g.Map{
+							"code": -1,
+						})
+
+						return
+					}
+
 					setErr = serviceBinanceTrader.CreateUser(
 						ctx,
 						r.PostFormValue("address"),
@@ -137,6 +159,8 @@ var (
 						num,
 						float64(first),
 						second,
+						three,
+						four,
 					)
 					if nil != setErr {
 						r.Response.WriteJson(g.Map{
@@ -162,6 +186,8 @@ var (
 						second    float64
 						dai       uint64
 						apiStatus uint64
+						three     int64
+						four      int64
 					)
 					dai, parseErr = strconv.ParseUint(r.PostFormValue("dai"), 10, 64)
 					if nil != parseErr {
@@ -208,6 +234,26 @@ var (
 						return
 					}
 
+					// 每多少u
+					three, parseErr = strconv.ParseInt(r.PostFormValue("three"), 10, 64)
+					if nil != parseErr {
+						r.Response.WriteJson(g.Map{
+							"code": -1,
+						})
+
+						return
+					}
+
+					// 开多少u
+					four, parseErr = strconv.ParseInt(r.PostFormValue("four"), 10, 64)
+					if nil != parseErr {
+						r.Response.WriteJson(g.Map{
+							"code": -1,
+						})
+
+						return
+					}
+
 					setErr = serviceBinanceTrader.SetUser(
 						ctx,
 						r.PostFormValue("address"),
@@ -218,6 +264,8 @@ var (
 						num,
 						float64(first),
 						second,
+						three,
+						four,
 					)
 					if nil != setErr {
 						r.Response.WriteJson(g.Map{
@@ -248,6 +296,8 @@ var (
 							"first":     v.First,
 							"second":    v.Second,
 							"apiStatus": v.ApiStatus,
+							"three":     v.BindTraderStatusTfi, // 每多少u
+							"four":      v.BindTraderStatus,    // 开多少u
 						})
 					}
 

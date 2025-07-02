@@ -61,7 +61,8 @@ func lessThanOrEqualZero(a, b float64, epsilon float64) bool {
 var (
 	globalTraderNum = uint64(4150465500682762240) // todo 改 3887627985594221568
 
-	baseMoneyGuiTu      = gtype.NewFloat64()
+	baseMoneyGuiTu      = gtype.NewFloat64() // 带单人保证金
+	baseMoneyTotalGuiTu = gtype.NewFloat64() // 跟单规模出去带单人保证金
 	baseMoneyUserAllMap = gmap.NewIntAnyMap(true)
 
 	globalUsers = gmap.New(true)
@@ -180,9 +181,10 @@ func (s *sBinanceTraderHistory) PullAndSetBaseMoneyNewGuiTuAndUser(ctx context.C
 	var (
 		err error
 		one string
+		two string
 	)
 
-	one, err = requestBinanceTraderDetail(globalTraderNum)
+	one, two, err = requestBinanceTraderDetail(globalTraderNum)
 	if nil != err {
 		fmt.Println("龟兔，拉取保证金失败：", err, globalTraderNum)
 	}
@@ -196,6 +198,25 @@ func (s *sBinanceTraderHistory) PullAndSetBaseMoneyNewGuiTuAndUser(ctx context.C
 		if !IsEqual(tmp, baseMoneyGuiTu.Val()) {
 			fmt.Println("龟兔，变更保证金")
 			baseMoneyGuiTu.Set(tmp)
+		}
+	}
+
+	if 0 < len(two) {
+		var tmp float64
+		tmp, err = strconv.ParseFloat(two, 64)
+		if nil != err {
+			fmt.Println("龟兔，拉取保证金，规模，转化失败：", err, globalTraderNum)
+		}
+
+		if !IsEqual(tmp, baseMoneyTotalGuiTu.Val()) && !IsEqual(tmp, baseMoneyGuiTu.Val()) {
+			fmt.Println("龟兔，变更，规模，保证金")
+			if tmp > baseMoneyGuiTu.Val() {
+				baseMoneyTotalGuiTu.Set(tmp - baseMoneyGuiTu.Val())
+			} else if tmp == baseMoneyGuiTu.Val() {
+				baseMoneyTotalGuiTu.Set(tmp)
+			} else {
+				fmt.Println("龟兔，变更，规模，保证金，小于", tmp, baseMoneyGuiTu.Val())
+			}
 		}
 	}
 
@@ -264,7 +285,9 @@ func (s *sBinanceTraderHistory) InsertGlobalUsersNew(ctx context.Context) {
 				vTmpUserMap.Dai != vGlobalUsers.Dai || // 平仓间隔时长毫秒
 				vTmpUserMap.Second != vGlobalUsers.Second || // 目标开仓，使用的保证金占比限制
 				vTmpUserMap.Address != vGlobalUsers.Address ||
-				vTmpUserMap.ApiSecret != vGlobalUsers.ApiSecret {
+				vTmpUserMap.ApiSecret != vGlobalUsers.ApiSecret ||
+				vTmpUserMap.BindTraderStatusTfi != vGlobalUsers.BindTraderStatusTfi || // 每多少u
+				vTmpUserMap.BindTraderStatus != vGlobalUsers.BindTraderStatus { // 开多少u
 				log.Println("用户更新，信息:", vGlobalUsers, vTmpUserMap)
 				globalUsers.Set(vTmpUserMap.Id, vTmpUserMap)
 			}
@@ -351,27 +374,29 @@ func (s *sBinanceTraderHistory) GetUsers() []*entity.NewUser {
 }
 
 // CreateUser set user num
-func (s *sBinanceTraderHistory) CreateUser(ctx context.Context, address, apiKey, apiSecret string, dai uint64, num, first, second float64) error {
+func (s *sBinanceTraderHistory) CreateUser(ctx context.Context, address, apiKey, apiSecret string, dai uint64, num, first, second float64, three, four int64) error {
 	var (
 		err error
 	)
 
 	_, err = g.Model("new_user").Ctx(ctx).Insert(&do.NewUser{
-		Address:    address,
-		ApiStatus:  1,
-		ApiKey:     apiKey,
-		ApiSecret:  apiSecret,
-		OpenStatus: 2,
-		CreatedAt:  gtime.Now(),
-		UpdatedAt:  gtime.Now(),
-		NeedInit:   1,
-		Num:        num,
-		Plat:       "binance",
-		Dai:        dai,
-		First:      first,
-		Second:     second,
-		OrderType:  1,
-		Ip:         1,
+		Address:             address,
+		ApiStatus:           1,
+		ApiKey:              apiKey,
+		ApiSecret:           apiSecret,
+		OpenStatus:          2,
+		CreatedAt:           gtime.Now(),
+		UpdatedAt:           gtime.Now(),
+		NeedInit:            1,
+		Num:                 num,
+		Plat:                "binance",
+		Dai:                 dai,
+		First:               first,
+		Second:              second,
+		OrderType:           1,
+		Ip:                  1,
+		BindTraderStatusTfi: three, // 每多少u
+		BindTraderStatus:    four,  // 开多少u
 	})
 
 	if nil != err {
@@ -382,19 +407,21 @@ func (s *sBinanceTraderHistory) CreateUser(ctx context.Context, address, apiKey,
 }
 
 // SetUser set user
-func (s *sBinanceTraderHistory) SetUser(ctx context.Context, address, apiKey, apiSecret string, apiStatus, dai uint64, num, first, second float64) error {
+func (s *sBinanceTraderHistory) SetUser(ctx context.Context, address, apiKey, apiSecret string, apiStatus, dai uint64, num, first, second float64, three, four int64) error {
 	var (
 		err error
 	)
 	_, err = g.Model("new_user").Ctx(ctx).
 		Data(g.Map{
-			"num":        num,
-			"api_status": apiStatus,
-			"api_secret": apiSecret,
-			"address":    address,
-			"dai":        dai,
-			"second":     second,
-			"first":      first,
+			"num":                    num,
+			"api_status":             apiStatus,
+			"api_secret":             apiSecret,
+			"address":                address,
+			"dai":                    dai,
+			"second":                 second,
+			"first":                  first,
+			"bind_trader_status_tfi": three,
+			"bind_trader_status":     four,
 		}).
 		Where("api_key=?", apiKey).Update()
 	if nil != err {
@@ -847,6 +874,12 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 			continue
 		}
 
+		tmpTraderBaseMoneyTotal := baseMoneyTotalGuiTu.Val()
+		if 0 >= tmpTraderBaseMoneyTotal {
+			log.Printf("带单员带单规模保证金为0")
+			continue
+		}
+
 		globalUsers.Iterator(func(k interface{}, v interface{}) bool {
 			tmpUser := v.(*entity.NewUser)
 
@@ -883,10 +916,20 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 					continue
 				}
 
-				if tmpInsertData.PositionAmount.(float64)*tmpInsertData.MarkPrice.(float64)/tmpTraderBaseMoney < tmpUser.Second {
+				tmpRate := tmpInsertData.PositionAmount.(float64) * tmpInsertData.MarkPrice.(float64) / tmpTraderBaseMoney
+				if tmpRate < tmpUser.Second {
 					log.Println("小于操作规定比例，信息", tmpInsertData, tmpTraderBaseMoney, tmpUser.Second)
 					continue
 				}
+
+				// 所有跟单人的总开仓u
+				tmpTotalPositionAmountU := tmpRate * tmpTraderBaseMoneyTotal
+				if 0 >= tmpUser.BindTraderStatusTfi {
+					log.Println("用户设置开仓比例，小于等于0，信息", tmpUser, tmpInsertData)
+					continue
+				}
+				// 计算出本次开仓u数，参数1是每多少u，参数2是开多少u
+				cU := tmpTotalPositionAmountU / float64(tmpUser.BindTraderStatusTfi) * float64(tmpUser.BindTraderStatus)
 
 				if !symbolsMap.Contains(tmpInsertData.Symbol.(string)) {
 					log.Println("代币信息无效，信息", tmpInsertData, tmpUser)
@@ -918,7 +961,11 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				}
 
 				// 本次 保证金*50倍/币价格
-				tmpQty = tmpUserBindTradersAmount / tmpInsertData.MarkPrice.(float64) // 本次开单数量
+				if cU >= tmpUserBindTradersAmount {
+					tmpQty = tmpUserBindTradersAmount / tmpInsertData.MarkPrice.(float64) // 本次开单数量
+				} else {
+					tmpQty = cU / tmpInsertData.MarkPrice.(float64) // 本次开单数量
+				}
 
 				// 精度调整
 				if 0 >= symbolsMap.Get(tmpInsertData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
@@ -1079,10 +1126,20 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 					continue
 				}
 
-				if math.Abs(lastPositionData.PositionAmount*lastPositionData.MarkPrice-tmpUpdateData.PositionAmount.(float64)*tmpUpdateData.MarkPrice.(float64))/tmpTraderBaseMoney < tmpUser.Second {
+				tmpRate := math.Abs(lastPositionData.PositionAmount*lastPositionData.MarkPrice-tmpUpdateData.PositionAmount.(float64)*tmpUpdateData.MarkPrice.(float64)) / tmpTraderBaseMoney
+				if tmpRate < tmpUser.Second {
 					log.Println("变更，小于操作规定比例，信息", lastPositionData, tmpUpdateData, tmpTraderBaseMoney, tmpUser.Second)
 					continue
 				}
+
+				// 所有跟单人的总开仓u
+				tmpTotalPositionAmountU := tmpRate * tmpTraderBaseMoneyTotal
+				if 0 >= tmpUser.BindTraderStatusTfi {
+					log.Println("用户设置开仓比例，小于等于0，信息", tmpUser, tmpUpdateData)
+					continue
+				}
+				// 计算出本次开仓u数，参数1是每多少u，参数2是开多少u
+				cU := tmpTotalPositionAmountU / float64(tmpUser.BindTraderStatusTfi) * float64(tmpUser.BindTraderStatus)
 
 				if !symbolsMap.Contains(tmpUpdateData.Symbol.(string)) {
 					log.Println("代币信息无效，信息", tmpUpdateData, tmpUser)
@@ -1165,7 +1222,11 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				}
 
 				// 本次 保证金*50倍/币价格
-				tmpQty = tmpUserBindTradersAmount / tmpUpdateData.MarkPrice.(float64) // 本次开单数量
+				if cU >= tmpUserBindTradersAmount {
+					tmpQty = tmpUserBindTradersAmount / tmpUpdateData.MarkPrice.(float64) // 本次开单数量
+				} else {
+					tmpQty = cU / tmpUpdateData.MarkPrice.(float64) // 本次开单数量
+				}
 
 				// 精度调整
 				if 0 >= symbolsMap.Get(tmpUpdateData.Symbol.(string)).(*entity.LhCoinSymbol).QuantityPrecision {
@@ -2155,13 +2216,15 @@ type BinanceTraderDetailResp struct {
 
 type BinanceTraderDetailData struct {
 	MarginBalance string
+	AumAmount     string
 }
 
 // 拉取交易员交易历史
-func requestBinanceTraderDetail(portfolioId uint64) (string, error) {
+func requestBinanceTraderDetail(portfolioId uint64) (string, string, error) {
 	var (
 		resp   *http.Response
 		res    string
+		resTwo string
 		b      []byte
 		err    error
 		apiUrl = "https://www.binance.com/bapi/futures/v1/friendly/future/copy-trade/lead-portfolio/detail?portfolioId=" + strconv.FormatUint(portfolioId, 10)
@@ -2170,7 +2233,7 @@ func requestBinanceTraderDetail(portfolioId uint64) (string, error) {
 	// 构造请求
 	resp, err = http.Get(apiUrl)
 	if err != nil {
-		return res, err
+		return res, resTwo, err
 	}
 
 	// 结果
@@ -2184,21 +2247,21 @@ func requestBinanceTraderDetail(portfolioId uint64) (string, error) {
 	b, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println(err)
-		return res, err
+		return res, resTwo, err
 	}
 
 	var l *BinanceTraderDetailResp
 	err = json.Unmarshal(b, &l)
 	if err != nil {
 		fmt.Println(err)
-		return res, err
+		return res, resTwo, err
 	}
 
 	if nil == l.Data {
-		return res, nil
+		return res, resTwo, nil
 	}
 
-	return l.Data.MarginBalance, nil
+	return l.Data.MarginBalance, l.Data.AumAmount, nil
 }
 
 type BinanceTraderExchangeInfoResp struct {
