@@ -64,6 +64,7 @@ var (
 	baseMoneyGuiTu      = gtype.NewFloat64() // 带单人保证金
 	baseMoneyTotalGuiTu = gtype.NewFloat64() // 跟单规模出去带单人保证金
 	baseMoneyUserAllMap = gmap.NewIntAnyMap(true)
+	maxPositionsUsdt    = gmap.NewStrAnyMap(true)
 
 	globalUsers = gmap.New(true)
 
@@ -237,6 +238,8 @@ func (s *sBinanceTraderHistory) PullAndSetBaseMoneyNewGuiTuAndUser(ctx context.C
 	globalUsers.Iterator(func(k interface{}, v interface{}) bool {
 		vGlobalUsers := v.(*entity.NewUser)
 
+		tmpStrUserId := strconv.FormatUint(uint64(vGlobalUsers.Id), 10)
+
 		if _, ok := tmpUserMap[vGlobalUsers.Id]; !ok {
 			fmt.Println("龟兔，变更保证金，用户数据错误，数据库不存在：", vGlobalUsers)
 			return true
@@ -250,6 +253,32 @@ func (s *sBinanceTraderHistory) PullAndSetBaseMoneyNewGuiTuAndUser(ctx context.C
 			if !IsEqual(tmp, baseMoneyUserAllMap.Get(int(vGlobalUsers.Id)).(float64)) {
 				fmt.Println("变更成功", int(vGlobalUsers.Id), baseMoneyUserAllMap.Get(int(vGlobalUsers.Id)).(float64), tmp)
 				baseMoneyUserAllMap.Set(int(vGlobalUsers.Id), tmp)
+			}
+		}
+
+		var (
+			detail []*UserPositions
+		)
+		detail = getBinanceInfo(vGlobalUsers.ApiKey, vGlobalUsers.ApiSecret)
+		if nil == detail {
+			fmt.Println("查询仓位信息错误", vGlobalUsers)
+			return true
+		}
+
+		for _, vDetail := range detail {
+			var tmpMax float64
+			tmpMax, err = strconv.ParseFloat(vDetail.MaxNotional, 64)
+			if nil != err {
+				fmt.Println("查询仓位，转化失败：", err, vDetail)
+				continue
+			}
+
+			if !maxPositionsUsdt.Contains(vDetail.Symbol + vDetail.PositionSide + tmpStrUserId) {
+				maxPositionsUsdt.Set(vDetail.Symbol+vDetail.PositionSide+tmpStrUserId, tmpMax)
+			} else {
+				if !IsEqual(tmpMax, maxPositionsUsdt.Get(vDetail.Symbol+vDetail.PositionSide+tmpStrUserId).(float64)) {
+					maxPositionsUsdt.Set(vDetail.Symbol+vDetail.PositionSide+tmpStrUserId, tmpMax)
+				}
 			}
 		}
 
@@ -881,6 +910,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 		globalUsers.Iterator(func(k interface{}, v interface{}) bool {
 			tmpUser := v.(*entity.NewUser)
+			tmpStrUserId := strconv.FormatUint(uint64(tmpUser.Id), 10)
 
 			var tmpUserBindTradersAmount float64
 			if !baseMoneyUserAllMap.Contains(int(tmpUser.Id)) {
@@ -965,10 +995,23 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				}
 
 				// 本次 保证金*50倍/币价格
+				var maxPositionUsdtTmp float64
+				if maxPositionsUsdt.Contains(tmpInsertData.Symbol.(string) + tmpInsertData.PositionSide.(string) + tmpStrUserId) {
+					maxPositionUsdtTmp = maxPositionsUsdt.Get(tmpInsertData.Symbol.(string) + tmpInsertData.PositionSide.(string) + tmpStrUserId).(float64)
+				}
+
 				if cU >= tmpUserBindTradersAmount {
 					tmpQty = tmpUserBindTradersAmount / tmpInsertData.MarkPrice.(float64) // 本次开单数量
+
+					if !lessThanOrEqualZero(maxPositionUsdtTmp, 0, 1e-7) && tmpUserBindTradersAmount >= maxPositionUsdtTmp {
+						tmpQty = maxPositionUsdtTmp / tmpInsertData.MarkPrice.(float64) // 本次开单数量
+					}
 				} else {
 					tmpQty = cU / tmpInsertData.MarkPrice.(float64) // 本次开单数量
+
+					if !lessThanOrEqualZero(maxPositionUsdtTmp, 0, 1e-7) && cU >= maxPositionUsdtTmp {
+						tmpQty = maxPositionUsdtTmp / tmpInsertData.MarkPrice.(float64) // 本次开单数量
+					}
 				}
 
 				// 精度调整
@@ -1231,10 +1274,23 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				}
 
 				// 本次 保证金*50倍/币价格
+				var maxPositionUsdtTmp float64
+				if maxPositionsUsdt.Contains(tmpUpdateData.Symbol.(string) + tmpUpdateData.PositionSide.(string) + tmpStrUserId) {
+					maxPositionUsdtTmp = maxPositionsUsdt.Get(tmpUpdateData.Symbol.(string) + tmpUpdateData.PositionSide.(string) + tmpStrUserId).(float64)
+				}
+
 				if cU >= tmpUserBindTradersAmount {
 					tmpQty = tmpUserBindTradersAmount / tmpUpdateData.MarkPrice.(float64) // 本次开单数量
+
+					if !lessThanOrEqualZero(maxPositionUsdtTmp, 0, 1e-7) && tmpUserBindTradersAmount >= maxPositionUsdtTmp {
+						tmpQty = maxPositionUsdtTmp / tmpUpdateData.MarkPrice.(float64) // 本次开单数量
+					}
 				} else {
 					tmpQty = cU / tmpUpdateData.MarkPrice.(float64) // 本次开单数量
+
+					if !lessThanOrEqualZero(maxPositionUsdtTmp, 0, 1e-7) && cU >= maxPositionUsdtTmp {
+						tmpQty = maxPositionUsdtTmp / tmpUpdateData.MarkPrice.(float64) // 本次开单数量
+					}
 				}
 
 				// 精度调整
@@ -2739,4 +2795,134 @@ func placeLimitOrderGate(apiK, apiS, contract string, rule, timeLimit int32, pri
 	}
 
 	return result, nil
+}
+
+// Asset 代表单个资产的保证金信息
+type Asset struct {
+	TotalMarginBalance string `json:"totalMarginBalance"` // 资产余额
+	Positions          []*UserPositions
+}
+
+type UserPositions struct {
+	Symbol       string `json:"symbol"`
+	MaxNotional  string `json:"maxNotional"`
+	PositionSide string `json:"positionSide"`
+}
+
+// 生成签名
+func generateSignature(apiS string, params url.Values) string {
+	// 将请求参数编码成 URL 格式的字符串
+	queryString := params.Encode()
+
+	// 生成签名
+	mac := hmac.New(sha256.New, []byte(apiS))
+	mac.Write([]byte(queryString)) // 用 API Secret 生成签名
+	return hex.EncodeToString(mac.Sum(nil))
+}
+
+// 获取币安服务器时间
+func getBinanceServerTime() int64 {
+	urlTmp := "https://api.binance.com/api/v3/time"
+	resp, err := http.Get(urlTmp)
+	if err != nil {
+		log.Println("Error getting server time:", err)
+		return 0
+	}
+
+	defer func() {
+		if resp != nil && resp.Body != nil {
+			err := resp.Body.Close()
+			if err != nil {
+				log.Println("关闭响应体错误：", err)
+			}
+		}
+	}()
+
+	var serverTimeResponse struct {
+		ServerTime int64 `json:"serverTime"`
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println("Error reading response body:", err)
+		return 0
+	}
+	if err := json.Unmarshal(body, &serverTimeResponse); err != nil {
+		log.Println("Error unmarshaling server time:", err)
+		return 0
+	}
+
+	return serverTimeResponse.ServerTime
+}
+
+// GetBinanceInfo 获取账户信息
+func getBinanceInfo(apiK, apiS string) []*UserPositions {
+	// 请求的API地址
+	endpoint := "/fapi/v2/account"
+	baseURL := "https://fapi.binance.com"
+
+	// 获取当前时间戳（使用服务器时间避免时差问题）
+	serverTime := getBinanceServerTime()
+	if serverTime == 0 {
+		return nil
+	}
+	timestamp := strconv.FormatInt(serverTime, 10)
+
+	// 设置请求参数
+	params := url.Values{}
+	params.Set("timestamp", timestamp)
+	params.Set("recvWindow", "5000") // 设置接收窗口
+
+	// 生成签名
+	signature := generateSignature(apiS, params)
+
+	// 将签名添加到请求参数中
+	params.Set("signature", signature)
+
+	// 构建完整的请求URL
+	requestURL := baseURL + endpoint + "?" + params.Encode()
+
+	// 创建请求
+	req, err := http.NewRequest("GET", requestURL, nil)
+	if err != nil {
+		log.Println("Error creating request:", err)
+		return nil
+	}
+
+	// 添加请求头
+	req.Header.Add("X-MBX-APIKEY", apiK)
+
+	// 发送请求
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("Error sending request:", err)
+		return nil
+	}
+
+	defer func() {
+		if resp != nil && resp.Body != nil {
+			err := resp.Body.Close()
+			if err != nil {
+				log.Println("关闭响应体错误：", err)
+			}
+		}
+	}()
+
+	// 读取响应
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println("Error reading response:", err)
+		return nil
+	}
+
+	// 解析响应
+	var o *Asset
+	err = json.Unmarshal(body, &o)
+	if err != nil {
+		log.Println("Error unmarshalling response:", err)
+		return nil
+	}
+
+	// 返回资产余额
+	return o.Positions
 }
