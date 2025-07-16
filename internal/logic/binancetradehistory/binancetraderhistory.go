@@ -79,8 +79,6 @@ var (
 	exMap         = gmap.NewStrAnyMap(true)
 
 	running = true
-
-	locKOrderTimeNew = gmap.NewStrAnyMap(true)
 )
 
 // GetGlobalInfo 获取全局测试数据
@@ -552,8 +550,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 			binancePositionMap = make(map[string]*entity.TraderPosition, 0)
 			locKOrder.Clear()
 			locKOrderTime.Clear()
-
-			locKOrderTimeNew.Clear()
 			break
 		}
 
@@ -1053,15 +1049,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				locKOrder.Set(tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat)
 				locKOrderTime.Set(tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpNow)
 
-				if locKOrderTimeNew.Contains(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
-					lastOrderT := locKOrderTimeNew.Get(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(int64)
-					if (tmpNow - 60*15) < lastOrderT {
-						fmt.Println("15分钟锁定", tmpNow, lastOrderT, tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat, side)
-						continue
-					}
-				}
-				locKOrderTimeNew.Set(tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpNow)
-
 				//wg.Add(1)
 				err = s.pool.Add(ctx, func(ctx context.Context) {
 					//defer wg.Done()
@@ -1340,15 +1327,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				}
 				locKOrder.Set(tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat)
 				locKOrderTime.Set(tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpNow)
-
-				if locKOrderTimeNew.Contains(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
-					lastOrderTNew := locKOrderTimeNew.Get(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(int64)
-					if (tmpNow - 60*15) < lastOrderTNew {
-						fmt.Println("15分钟锁定", tmpNow, lastOrderTNew, tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat, side)
-						continue
-					}
-				}
-				locKOrderTimeNew.Set(tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpNow)
 
 				//wg.Add(1)
 				err = s.pool.Add(ctx, func(ctx context.Context) {
