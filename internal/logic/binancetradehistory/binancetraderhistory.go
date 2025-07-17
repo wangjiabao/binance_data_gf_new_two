@@ -555,6 +555,7 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 			locKOrderTime.Clear()
 
 			locKOrderTimeNew.Clear()
+			locKOrderPriceNew.Clear()
 			break
 		}
 
