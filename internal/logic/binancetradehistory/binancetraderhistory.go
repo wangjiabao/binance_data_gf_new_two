@@ -80,8 +80,8 @@ var (
 
 	running = true
 
-	locKOrderTimeNew  = gmap.NewStrAnyMap(true)
-	locKOrderPriceNew = gmap.NewStrAnyMap(true)
+	//locKOrderTimeNew  = gmap.NewStrAnyMap(true)
+	//locKOrderPriceNew = gmap.NewStrAnyMap(true)
 )
 
 // GetGlobalInfo 获取全局测试数据
@@ -554,8 +554,8 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 			locKOrder.Clear()
 			locKOrderTime.Clear()
 
-			locKOrderTimeNew.Clear()
-			locKOrderPriceNew.Clear()
+			//locKOrderTimeNew.Clear()
+			//locKOrderPriceNew.Clear()
 			break
 		}
 
@@ -1055,28 +1055,28 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				locKOrder.Set(tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat)
 				locKOrderTime.Set(tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpNow)
 
-				var lastOrderTNew int64
-				if locKOrderTimeNew.Contains(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
-					lastOrderTNew = locKOrderTimeNew.Get(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(int64)
-				}
-
-				var lastPrice float64
-				if locKOrderPriceNew.Contains(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
-					lastPrice = locKOrderPriceNew.Get(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(float64)
-				}
-				locKOrderPriceNew.Set(tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpInsertData.MarkPrice.(float64))
-
-				// 多单，本次价格比上一次低了不开
-				if (tmpNow - 60*15) < lastOrderTNew {
-					if "LONG" == positionSide && lastPrice >= tmpInsertData.MarkPrice.(float64) {
-						fmt.Println("15分钟锁定，多", tmpNow, lastOrderTNew, tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat, side, lastPrice, tmpInsertData.MarkPrice.(float64))
-						continue
-					} else if "SHORT" == positionSide && lastPrice <= tmpInsertData.MarkPrice.(float64) {
-						fmt.Println("15分钟锁定，空", tmpNow, lastOrderTNew, tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat, side, lastPrice, tmpInsertData.MarkPrice.(float64))
-						continue
-					}
-				}
-				locKOrderTimeNew.Set(tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpNow)
+				//var lastOrderTNew int64
+				//if locKOrderTimeNew.Contains(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
+				//	lastOrderTNew = locKOrderTimeNew.Get(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(int64)
+				//}
+				//
+				//var lastPrice float64
+				//if locKOrderPriceNew.Contains(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
+				//	lastPrice = locKOrderPriceNew.Get(tmpInsertData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(float64)
+				//}
+				//locKOrderPriceNew.Set(tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpInsertData.MarkPrice.(float64))
+				//
+				//// 多单，本次价格比上一次低了不开
+				//if (tmpNow - 60*15) < lastOrderTNew {
+				//	if "LONG" == positionSide && lastPrice >= tmpInsertData.MarkPrice.(float64) {
+				//		fmt.Println("15分钟锁定，多", tmpNow, lastOrderTNew, tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat, side, lastPrice, tmpInsertData.MarkPrice.(float64))
+				//		continue
+				//	} else if "SHORT" == positionSide && lastPrice <= tmpInsertData.MarkPrice.(float64) {
+				//		fmt.Println("15分钟锁定，空", tmpNow, lastOrderTNew, tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat, side, lastPrice, tmpInsertData.MarkPrice.(float64))
+				//		continue
+				//	}
+				//}
+				//locKOrderTimeNew.Set(tmpInsertData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpNow)
 
 				//wg.Add(1)
 				err = s.pool.Add(ctx, func(ctx context.Context) {
@@ -1357,32 +1357,32 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 				locKOrder.Set(tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat)
 				locKOrderTime.Set(tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpNow)
 
-				var lastOrderTNew int64
-				if locKOrderTimeNew.Contains(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
-					lastOrderTNew = locKOrderTimeNew.Get(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(int64)
-				}
-				var lastPrice float64
-				if locKOrderPriceNew.Contains(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
-					lastPrice = locKOrderPriceNew.Get(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(float64)
-				}
-
-				locKOrderPriceNew.Set(tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpUpdateData.MarkPrice.(float64))
-
-				// 多单，本次价格比上一次低了不开
-				if (tmpNow - 60*15) < lastOrderTNew {
-					if "LONG" == positionSide && lastPrice >= tmpUpdateData.MarkPrice.(float64) {
-						if lessThanOrEqualZero(lastPositionData.PositionAmount, tmpUpdateData.PositionAmount.(float64), 1e-7) {
-							fmt.Println("15分钟锁定，多", tmpNow, lastOrderTNew, tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat, side, lastPrice, tmpUpdateData.MarkPrice.(float64))
-							continue
-						}
-					} else if "SHORT" == positionSide && lastPrice <= tmpUpdateData.MarkPrice.(float64) {
-						if lessThanOrEqualZero(lastPositionData.PositionAmount, tmpUpdateData.PositionAmount.(float64), 1e-7) {
-							fmt.Println("15分钟锁定，空", tmpNow, lastOrderTNew, tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat, side, lastPrice, tmpUpdateData.MarkPrice.(float64))
-							continue
-						}
-					}
-				}
-				locKOrderTimeNew.Set(tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpNow)
+				//var lastOrderTNew int64
+				//if locKOrderTimeNew.Contains(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
+				//	lastOrderTNew = locKOrderTimeNew.Get(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(int64)
+				//}
+				//var lastPrice float64
+				//if locKOrderPriceNew.Contains(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId) {
+				//	lastPrice = locKOrderPriceNew.Get(tmpUpdateData.Symbol.(string) + "&" + positionSide + "&" + strUserId).(float64)
+				//}
+				//
+				//locKOrderPriceNew.Set(tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpUpdateData.MarkPrice.(float64))
+				//
+				//// 多单，本次价格比上一次低了不开
+				//if (tmpNow - 60*15) < lastOrderTNew {
+				//	if "LONG" == positionSide && lastPrice >= tmpUpdateData.MarkPrice.(float64) {
+				//		if lessThanOrEqualZero(lastPositionData.PositionAmount, tmpUpdateData.PositionAmount.(float64), 1e-7) {
+				//			fmt.Println("15分钟锁定，多", tmpNow, lastOrderTNew, tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat, side, lastPrice, tmpUpdateData.MarkPrice.(float64))
+				//			continue
+				//		}
+				//	} else if "SHORT" == positionSide && lastPrice <= tmpUpdateData.MarkPrice.(float64) {
+				//		if lessThanOrEqualZero(lastPositionData.PositionAmount, tmpUpdateData.PositionAmount.(float64), 1e-7) {
+				//			fmt.Println("15分钟锁定，空", tmpNow, lastOrderTNew, tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, quantityFloat, side, lastPrice, tmpUpdateData.MarkPrice.(float64))
+				//			continue
+				//		}
+				//	}
+				//}
+				//locKOrderTimeNew.Set(tmpUpdateData.Symbol.(string)+"&"+positionSide+"&"+strUserId, tmpNow)
 
 				//wg.Add(1)
 				err = s.pool.Add(ctx, func(ctx context.Context) {
