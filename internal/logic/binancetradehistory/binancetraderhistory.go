@@ -1245,7 +1245,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 				if lessThanOrEqualZero(tmpUpdateData.PositionAmount.(float64), 0, 1e-7) {
 					log.Println("完全平仓：", tmpUpdateData)
-					continue
 					// 全平仓则，开仓反向
 					if "LONG" == tmpUpdateData.PositionSide {
 						positionSide = "SHORT"
@@ -1282,7 +1281,6 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 
 				} else if lessThanOrEqualZero(tmpUpdateData.PositionAmount.(float64), lastPositionData.PositionAmount, 1e-7) {
 					log.Println("部分平仓：", tmpUpdateData, lastPositionData)
-					continue
 					// 部分平仓
 					if "LONG" == tmpUpdateData.PositionSide {
 						positionSide = "SHORT"
