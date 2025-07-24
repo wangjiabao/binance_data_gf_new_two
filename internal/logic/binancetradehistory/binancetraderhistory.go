@@ -1010,13 +1010,19 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 					tmpQty = tmpUserBindTradersAmount / tmpInsertData.MarkPrice.(float64) // 本次开单数量
 
 					if !lessThanOrEqualZero(maxPositionUsdtTmp, 0, 1e-7) && tmpUserBindTradersAmount >= maxPositionUsdtTmp {
-						tmpQty = maxPositionUsdtTmp / tmpInsertData.MarkPrice.(float64) // 本次开单数量
+						log.Println("新增，仓位的最大名义值", maxPositionUsdtTmp)
+						if 20 < maxPositionUsdtTmp {
+							tmpQty = (maxPositionUsdtTmp - 20) / tmpInsertData.MarkPrice.(float64) // 本次开单数量
+						}
 					}
 				} else {
 					tmpQty = cU / tmpInsertData.MarkPrice.(float64) // 本次开单数量
 
 					if !lessThanOrEqualZero(maxPositionUsdtTmp, 0, 1e-7) && cU >= maxPositionUsdtTmp {
-						tmpQty = maxPositionUsdtTmp / tmpInsertData.MarkPrice.(float64) // 本次开单数量
+						log.Println("新增，仓位的最大名义值", maxPositionUsdtTmp)
+						if 20 < maxPositionUsdtTmp {
+							tmpQty = (maxPositionUsdtTmp - 20) / tmpInsertData.MarkPrice.(float64) // 本次开单数量
+						}
 					}
 				}
 
@@ -1312,13 +1318,19 @@ func (s *sBinanceTraderHistory) PullAndOrderNewGuiTuPlay(ctx context.Context) {
 					tmpQty = tmpUserBindTradersAmount / tmpUpdateData.MarkPrice.(float64) // 本次开单数量
 
 					if !lessThanOrEqualZero(maxPositionUsdtTmp, 0, 1e-7) && tmpUserBindTradersAmount >= maxPositionUsdtTmp {
-						tmpQty = maxPositionUsdtTmp / tmpUpdateData.MarkPrice.(float64) // 本次开单数量
+						log.Println("变更仓位，仓位的最大名义值", maxPositionUsdtTmp)
+						if 20 < maxPositionUsdtTmp {
+							tmpQty = (maxPositionUsdtTmp - 20) / tmpUpdateData.MarkPrice.(float64) // 本次开单数量
+						}
 					}
 				} else {
 					tmpQty = cU / tmpUpdateData.MarkPrice.(float64) // 本次开单数量
 
 					if !lessThanOrEqualZero(maxPositionUsdtTmp, 0, 1e-7) && cU >= maxPositionUsdtTmp {
-						tmpQty = maxPositionUsdtTmp / tmpUpdateData.MarkPrice.(float64) // 本次开单数量
+						log.Println("变更仓位，仓位的最大名义值", maxPositionUsdtTmp)
+						if 20 < maxPositionUsdtTmp {
+							tmpQty = (maxPositionUsdtTmp - 20) / tmpUpdateData.MarkPrice.(float64) // 本次开单数量
+						}
 					}
 				}
 
